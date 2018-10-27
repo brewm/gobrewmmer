@@ -15,6 +15,9 @@ from: https://gist.github.com/random-robbie/1f7f94beda1221b8125b62abe35f45b6
 ## Install go dependencies
 `go get ...`
 
+## Setup database
+sqlite3 /path/to/brewmmer.db < ./scripts/setup_db.sql
+
 # GoBrewmmer
 
 ## Structure
@@ -30,6 +33,4 @@ https://github.com/google/periph
 -- I can't make this work with the onewire interface
 
 # Dev process
-Run the `./scripts/sync_pi.sh` script to rsync to local changes to RPI
-from: http://ixday.github.io/post/rsync_fswatch/
-
+Run the `./scripts/sync_pi.sh` script to rsync to local changes to RPI. Make sure you configure the $RPI_PORT and $RPI_HOST env variables.
