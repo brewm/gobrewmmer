@@ -1,42 +1,66 @@
 package main
 
 import (
-  "github.com/gin-gonic/gin"
-
+  "os"
+  "log"
+  "fmt"
   "database/sql"
   _ "github.com/mattn/go-sqlite3"
 
+  "github.com/gin-gonic/gin"
+
+  conn "github.com/brewm/gobrewmmer/pkg/connections"
   temp "github.com/brewm/gobrewmmer/pkg/temperature"
 )
 
-var db *sql.DB
-
 func main() {
   initDB()
-  defer db.Close()
+  defer conn.BrewmmerDB.Close()
 
 
-  r := gin.Default()
+  router := gin.Default()
 
-  r.GET("/ping", func(c *gin.Context) {
+  router.GET("/ping", func(c *gin.Context) {
     c.JSON(200, gin.H{
       "message": "pong",
     })
   })
 
-  r.GET("/sense", func(c *gin.Context) {
-    m := temp.Sense()
-    c.JSON(200, m)
-  })
+  v1 := router.Group("/v1/")
+  sessions := v1.Group("/sessions")
+  {
+   sessions.GET("/", temp.AllSession)
+   // v1.POST("/", createTodo)
+   // v1.GET("/", fetchAllTodo)
+   // v1.GET("/:id", fetchSingleTodo)
+   // v1.PUT("/:id", updateTodo)
+   // v1.DELETE("/:id", deleteTodo)
+  }
 
-  r.Run() // listen and serve on 0.0.0.0:8080
+  router.Run() // listen and serve on 0.0.0.0:8080
 }
 
 
 func initDB() {
-  db, err := sql.Open("sqlite3", "./brewmmer.db")
-  if err != nil {
-    log.Fatal(err)
+  dbPath := getEnv("DB_PATH", "./brewmmer.db")
+
+
+  _, fileErr := os.Stat(dbPath)
+  if os.IsNotExist(fileErr) {
+    log.Fatalf("Database file '%s' doesn't exist.", dbPath)
   }
-  log.Info("Succesfully connected to the database.")
+
+  var dbErr error
+  conn.BrewmmerDB, dbErr = sql.Open("sqlite3", dbPath)
+  if dbErr != nil {
+    log.Fatal(dbErr)
+  }
+  fmt.Printf("INFO: Database connection to '%s' was successfull!\n", dbPath)
+}
+
+func getEnv(key, fallback string) string {
+  if value, ok := os.LookupEnv(key); ok {
+    return value
+  }
+  return fallback
 }
