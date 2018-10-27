@@ -1,0 +1,35 @@
+# RPI setup
+## Install Go
+```
+wget https://storage.googleapis.com/golang/go1.11.1.linux-armv6l.tar.gz
+sudo tar -C /usr/local -xvf go1.10.1.linux-armv6l.tar.gz
+cat >> ~/.bashrc << 'EOF'
+export GOPATH=$HOME/go
+export PATH=/usr/local/go/bin:$PATH:$GOPATH/bin
+EOF
+source ~/.bashrc
+
+```
+from: https://gist.github.com/random-robbie/1f7f94beda1221b8125b62abe35f45b6
+
+## Install go dependencies
+`go get ...`
+
+# GoBrewmmer
+
+## Structure
+https://golang.org/doc/code.html
+https://github.com/golang-standards/project-layout
+
+## Libs
+### API
+https://github.com/gin-gonic/gin
+
+### Rpi connections
+https://github.com/google/periph
+-- I can't make this work with the onewire interface
+
+# Dev process
+Run the `./scripts/sync_pi.sh` script to rsync to local changes to RPI
+from: http://ixday.github.io/post/rsync_fswatch/
+
