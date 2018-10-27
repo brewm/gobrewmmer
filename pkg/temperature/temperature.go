@@ -8,16 +8,25 @@ import (
   "strings"
   "strconv"
 
+  "database/sql"
+
   // "periph.io/x/periph/host"
   // "periph.io/x/periph/conn/onewire/onewirereg"
   // "periph.io/x/periph/devices/ds18b20"
   )
 
-const sensorID = "28-0000051e015b"
+const sensorId = "28-0000051e015b"
 
+type Session struct {
+  Id             int              `json:"id"`
+  StartTime      time.Time        `json:"startTime"`
+  StopTime       time.Time        `json:"stopTime"`
+  Measurements   []Measurement    `json:"measurements"`
+  Note           string           `json:"note"`
+}
 
 type Measurement struct {
-  Serial      int       `json:"serial,omitempty"`
+  SessionId   int       `json:"sessionId,omitempty"`
   Timestamp   time.Time `json:"timestamp"`
   Temperature float64   `json:"temperature"`
 }
@@ -27,7 +36,7 @@ func Sense() Measurement {
 }
 
 func readTemperature() float64 {
-  sensorPath := fmt.Sprintf("/sys/bus/w1/devices/%s/w1_slave", sensorID)
+  sensorPath := fmt.Sprintf("/sys/bus/w1/devices/%s/w1_slave", sensorId)
   data, err := ioutil.ReadFile(sensorPath)
   if err != nil {
     log.Fatal(err)
@@ -49,6 +58,61 @@ func readTemperature() float64 {
 func readTestTemperature() float64 {
   return 21.3
 }
+
+
+
+func startSession() {
+
+}
+
+func FetchSessions(db *sql.DB) []Session {
+  sessions := []Session{}
+
+  rows, err := &db.Query(`
+    SELECT
+      id,
+      start_time,
+      stop_time,
+      note
+    FROM session`)
+
+  if err != nil {
+    return err
+  }
+  defer rows.Close()
+
+  for rows.Next() {
+    s := Session{}
+    err = rows.Scan(
+      &s.Id,
+      &s.StartTime,
+      &s.StopTime,
+      &s.Note,
+    )
+    if err != nil {
+      return err
+    }
+    sessions = append(sessions, s)
+  }
+  err = rows.Err()
+  if err != nil {
+    return err
+  }
+  return nil
+}
+
+// func FetchSession(db *sql.DB, sessionId int) Session {
+
+// }
+
+// func recordMeasurement(db *sql.DB) {
+//   _, err = db.Exec("insert into foo(id, name) values(1, 'foo'), (2, 'bar'), (3, 'baz')")
+//   if err != nil {
+//     log.Fatal(err)
+//   }
+// }
+
+
 
 // This is not working. :(
 // func Temperature3(){
