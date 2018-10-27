@@ -29,10 +29,9 @@ func main() {
   v1 := router.Group("/v1/")
   sessions := v1.Group("/sessions")
   {
-   sessions.GET("/", temp.AllSession)
-   // v1.POST("/", createTodo)
+   sessions.GET("/",    temp.AllSession)
+   sessions.GET("/:id", temp.SingleSession)
    // v1.GET("/", fetchAllTodo)
-   // v1.GET("/:id", fetchSingleTodo)
    // v1.PUT("/:id", updateTodo)
    // v1.DELETE("/:id", deleteTodo)
   }

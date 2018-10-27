@@ -20,7 +20,7 @@ import (
 const sensorId = "28-0000051e015b"
 
 type Session struct {
-  Id             int              `json:"id"`
+  Id             int64            `json:"id"`
   StartTime      time.Time        `json:"startTime"`
   StopTime       time.Time        `json:"stopTime"`
   Measurements   []Measurement    `json:"measurements,omitempty"`
@@ -28,7 +28,7 @@ type Session struct {
 }
 
 type Measurement struct {
-  SessionId   int       `json:"sessionId,omitempty"`
+  SessionId   int64     `json:"sessionId,omitempty"`
   Timestamp   time.Time `json:"timestamp"`
   Temperature float64   `json:"temperature"`
 }
@@ -64,16 +64,10 @@ func readTestTemperature() float64 {
 }
 
 
-
-func startSession() {
-
-}
-
-
 func AllSession(c *gin.Context) {
   sessions := []Session{}
 
-  if err :=fetchAllSession(&sessions); err == nil {
+  if err := fetchAllSession(&sessions); err == nil {
     c.JSON(http.StatusOK, sessions)
   } else {
     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -106,15 +100,16 @@ func fetchAllSession(sessions *[]Session) error {
       &s.Note,
     )
 
+    if err != nil {
+      return err
+    }
+
     if nullableStopTime != nil {
       s.StopTime = *nullableStopTime
     } else {
       s.StopTime = *new(time.Time)
     }
 
-    if err != nil {
-      return err
-    }
     *sessions = append(*sessions, s)
   }
   err = rows.Err()
@@ -122,7 +117,99 @@ func fetchAllSession(sessions *[]Session) error {
     return err
   }
 
-  return err
+  return nil
+}
+
+
+func SingleSession(c *gin.Context) {
+  session := Session{}
+
+  id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+  if err != nil {
+    c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+  }
+
+  session.Id = id
+
+  if err := fetchSingleSession(&session); err == nil {
+    c.JSON(http.StatusOK, session)
+  } else {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+  }
+}
+
+func fetchSingleSession(session *Session) error {
+  sqlStatement := `
+    SELECT
+      id,
+      start_time,
+      stop_time,
+      note
+    FROM session
+    WHERE id=$1`
+  row := conn.BrewmmerDB.QueryRow(sqlStatement, session.Id)
+
+  var nullableStopTime *time.Time
+
+  err := row.Scan(
+    &session.Id,
+    &session.StartTime,
+    &nullableStopTime,
+    &session.Note,
+  )
+
+  if err != nil {
+    return err
+  }
+
+  if nullableStopTime != nil {
+    session.StopTime = *nullableStopTime
+  } else {
+    session.StopTime = *new(time.Time)
+  }
+
+  err = fetchMeasurements(session)
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
+
+func fetchMeasurements(session *Session) error {
+  sqlStatement := `
+    SELECT
+      timestamp,
+      temperature
+    FROM measurement
+    WHERE session_id=$1`
+
+  rows, err := conn.BrewmmerDB.Query(sqlStatement, session.Id)
+
+  if err != nil {
+    return err
+  }
+  defer rows.Close()
+
+  for rows.Next() {
+    m := Measurement{}
+    err = rows.Scan(
+      &m.Timestamp,
+      &m.Temperature,
+    )
+
+    if err != nil {
+      return err
+    }
+
+    session.Measurements = append(session.Measurements, m)
+  }
+  err = rows.Err()
+  if err != nil {
+    return err
+  }
+
+  return nil
 }
 
 // func FetchSession(db *sql.DB, sessionId int) Session {
@@ -139,7 +226,7 @@ func fetchAllSession(sessions *[]Session) error {
 
 
 // This is not working. :(
-// func Temperature3(){
+// func Temperature(){
 //   // Make sure periph is initialized.
 //   if _, err := host.Init(); err != nil {
 //     fmt.Println(err)
