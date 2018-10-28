@@ -14,6 +14,7 @@ from: https://gist.github.com/random-robbie/1f7f94beda1221b8125b62abe35f45b6
 
 ## Install go dependencies
 `go get ...`
+TODO: use godeps
 
 ## Setup database
 sqlite3 /path/to/brewmmer.db < ./scripts/setup_db.sql
@@ -25,6 +26,8 @@ https://golang.org/doc/code.html
 https://github.com/golang-standards/project-layout
 
 ## Libs
+Trying to use a minimal amount of external packages to control complexity. E.g. use the plain 'database/sql' instead of ORM.
+
 ### API
 https://github.com/gin-gonic/gin
 
@@ -33,4 +36,9 @@ https://github.com/google/periph
 -- I can't make this work with the onewire interface
 
 # Dev process
+
+## Local development
+Everything is working except the ds18b20 package. The application is not crashing though, and ERR is printed and 0.0 temperature is returned.
+
+## Remote development
 Run the `./scripts/sync_pi.sh` script to rsync to local changes to RPI. Make sure you configure the $RPI_PORT and $RPI_HOST env variables.
