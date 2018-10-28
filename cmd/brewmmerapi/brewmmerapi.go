@@ -33,7 +33,7 @@ func main() {
   {
    sessions.GET("/",    temp.AllSession)
    sessions.GET("/:id", temp.SingleSession)
-   sessions.POST("/",   temp.StartSession)
+   // sessions.POST("/",   temp.StartSession)
   }
 
   router.Run() // listen and serve on 0.0.0.0:8080

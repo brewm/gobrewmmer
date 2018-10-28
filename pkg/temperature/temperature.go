@@ -2,22 +2,14 @@ package temperature
 
 import (
   "time"
-  "fmt"
-  "strings"
   "strconv"
   "net/http"
-  "io/ioutil"
 
   "github.com/gin-gonic/gin"
 
+  "github.com/brewm/gobrewmmer/pkg/ds18b20"
   conn "github.com/brewm/gobrewmmer/pkg/connections"
-
-  // "periph.io/x/periph/host"
-  // "periph.io/x/periph/conn/onewire/onewirereg"
-  // "periph.io/x/periph/devices/ds18b20"
-  )
-
-const sensorId = "28-0000051e015b"
+)
 
 type Session struct {
   Id             int64            `json:"id"`
@@ -35,34 +27,9 @@ type Measurement struct {
 
 
 func Sense(c *gin.Context) {
-  m := Measurement{Timestamp: time.Now(), Temperature: readTemperature()}
+  m := Measurement{Timestamp: time.Now(), Temperature: ds18b20.ReadTemperature()}
   c.JSON(200, m)
 }
-
-func readTemperature() float64 {
-  sensorPath := fmt.Sprintf("/sys/bus/w1/devices/%s/w1_slave", sensorId)
-  data, err := ioutil.ReadFile(sensorPath)
-  if err != nil {
-    fmt.Println(err)
-    return 0.0
-  }
-
-  raw := string(data)
-  tString := raw[strings.LastIndex(raw, "t=")+2:len(raw)-1]
-
-  t, err := strconv.ParseFloat(tString, 64)
-  if err != nil {
-    fmt.Println(err)
-    return 0.0
-  }
-
-  return t / 1000.0
-}
-
-func readTestTemperature() float64 {
-  return 21.3
-}
-
 
 func AllSession(c *gin.Context) {
   sessions := []Session{}
@@ -211,43 +178,3 @@ func fetchMeasurements(session *Session) error {
 
   return nil
 }
-
-// func FetchSession(db *sql.DB, sessionId int) Session {
-
-// }
-
-// func recordMeasurement(db *sql.DB) {
-//   _, err = db.Exec("insert into foo(id, name) values(1, 'foo'), (2, 'bar'), (3, 'baz')")
-//   if err != nil {
-//     fmt.Println(err)
-//   }
-// }
-
-
-
-// This is not working. :(
-// func Temperature(){
-//   // Make sure periph is initialized.
-//   if _, err := host.Init(); err != nil {
-//     fmt.Println(err)
-//   }
-
-//   // Use onewirereg 1-wire bus registry to find the first available 1-wire bus.
-//   bus, err := onewirereg.Open("")
-//   if err != nil {
-//     fmt.Println(err)
-//   }
-//   defer bus.Close()
-
-//   fmt.Println(ds18b20.ConvertAll(bus, 10))
-//   // 0x7a00000131825228
-//   dev, err := ds18b20.New(bus, 0x7a0000051e015b, 10)
-//   if err != nil {
-//       fmt.Println(err)
-//   }
-//   defer dev.Halt()
-
-//   fmt.Println(dev.LastTemp())
-// }
-
-
