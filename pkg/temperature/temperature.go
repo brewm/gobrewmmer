@@ -1,6 +1,7 @@
 package temperature
 
 import (
+  "fmt"
   "time"
   "strconv"
   "net/http"
@@ -11,8 +12,11 @@ import (
   conn "github.com/brewm/gobrewmmer/pkg/connections"
 )
 
+// https://play.golang.org/p/9TSzoxgzF13 for testing
+var sessionChannel chan struct{}
+
 type Session struct {
-  Id             int64            `json:"id"`
+  Id             int              `json:"id"`
   StartTime      time.Time        `json:"startTime"`
   StopTime       time.Time        `json:"stopTime"`
   Measurements   []Measurement    `json:"measurements,omitempty"`
@@ -20,7 +24,7 @@ type Session struct {
 }
 
 type Measurement struct {
-  SessionId   int64     `json:"sessionId,omitempty"`
+  SessionId   int       `json:"sessionId,omitempty"`
   Timestamp   time.Time `json:"timestamp"`
   Temperature float64   `json:"temperature"`
 }
@@ -91,7 +95,7 @@ func fetchAllSession(sessions *[]Session) error {
 func SingleSession(c *gin.Context) {
   session := Session{}
 
-  id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+  id, err := strconv.Atoi(c.Param("id"))
   if err != nil {
     c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
   }
@@ -178,3 +182,73 @@ func fetchMeasurements(session *Session) error {
 
   return nil
 }
+
+func StartSession(c *gin.Context) {
+  if sessionChannel != nil {
+    c.JSON(http.StatusBadRequest, gin.H{"error": "Session is already in progress. One session can be actibe at a time."})
+    return
+  }
+
+  note := c.PostForm("note")
+
+  sqlStatement := `
+    INSERT INTO session (start_time, note)
+    VALUES ($1, $2)`
+
+  result, err := conn.BrewmmerDB.Exec(sqlStatement, time.Now(), note)
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+  }
+
+  sessionId, err :=result.LastInsertId()
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+  }
+
+  startSessionProcess(int(sessionId))
+
+  c.JSON(http.StatusOK, gin.H{
+    "id": sessionId,
+  })
+}
+
+func startSessionProcess(id int) {
+  sessionChannel = make(chan struct{})
+
+  // Start goroutine to periodically run the insert
+  go func(id int) {
+    for {
+      // Start goroutine to do an async insert
+      go insertTemperature(id)
+
+      time.Sleep(1 * time.Second)
+      select {
+      case <-sessionChannel:
+        fmt.Printf("[%d] Stop session process\n", id)
+        return
+      default: // adding default will make it not block
+        fmt.Printf("[%d] Rolling to next iteration\n", id)
+      }
+    }
+  }(id)
+}
+
+func insertTemperature(id int) {
+  sqlStatement := `
+    INSERT INTO measurement (session_id, timestamp, temperature)
+    VALUES ($1, $2, $3);`
+
+  _, err := conn.BrewmmerDB.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
+  if err != nil {
+    fmt.Printf("ERROR: temperature recording failed for session with id '%d'\n", id)
+  }
+}
+
+func StopSession(c *gin.Context) {
+  if sessionChannel == nil {
+    c.JSON(http.StatusBadRequest, gin.H{"error": "There is no active session. Nothing to stop!"})
+    return
+  }
+  close(sessionChannel)
+}
+
