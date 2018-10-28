@@ -27,13 +27,13 @@ func main() {
   })
 
   v1 := router.Group("/v1/")
+
+  v1.GET("/sense", temp.Sense)
   sessions := v1.Group("/sessions")
   {
    sessions.GET("/",    temp.AllSession)
    sessions.GET("/:id", temp.SingleSession)
-   // v1.GET("/", fetchAllTodo)
-   // v1.PUT("/:id", updateTodo)
-   // v1.DELETE("/:id", deleteTodo)
+   sessions.POST("/",   temp.StartSession)
   }
 
   router.Run() // listen and serve on 0.0.0.0:8080
