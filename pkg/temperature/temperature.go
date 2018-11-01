@@ -52,7 +52,7 @@ func fetchAllSession(sessions *[]Session) error {
       start_time,
       stop_time,
       note
-    FROM session`)
+    FROM sessions`)
 
   if err != nil {
     return err
@@ -116,7 +116,7 @@ func fetchSingleSession(session *Session) error {
       start_time,
       stop_time,
       note
-    FROM session
+    FROM sessions
     WHERE id=$1`
   row := conn.BrewmmerDB.QueryRow(sqlStatement, session.Id)
 
@@ -152,7 +152,7 @@ func fetchMeasurements(session *Session) error {
     SELECT
       timestamp,
       temperature
-    FROM measurement
+    FROM measurements
     WHERE session_id=$1`
 
   rows, err := conn.BrewmmerDB.Query(sqlStatement, session.Id)
@@ -192,7 +192,7 @@ func StartSession(c *gin.Context) {
   note := c.PostForm("note")
 
   sqlStatement := `
-    INSERT INTO session (start_time, note)
+    INSERT INTO sessions (start_time, note)
     VALUES ($1, $2)`
 
   result, err := conn.BrewmmerDB.Exec(sqlStatement, time.Now(), note)
@@ -235,7 +235,7 @@ func startSessionProcess(id int) {
 
 func insertTemperature(id int) {
   sqlStatement := `
-    INSERT INTO measurement (session_id, timestamp, temperature)
+    INSERT INTO measurements (session_id, timestamp, temperature)
     VALUES ($1, $2, $3);`
 
   _, err := conn.BrewmmerDB.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
