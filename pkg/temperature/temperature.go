@@ -12,8 +12,10 @@ import (
   conn "github.com/brewm/gobrewmmer/pkg/connections"
 )
 
-// https://play.golang.org/p/9TSzoxgzF13 for testing
 var sessionChannel chan struct{}
+
+// in seconds
+const measureInterval = 600
 
 type Session struct {
   Id             int              `json:"id"`
@@ -221,7 +223,7 @@ func startSessionProcess(id int) {
       // Start goroutine to do an async insert
       go insertTemperature(id)
 
-      time.Sleep(1 * time.Second)
+      time.Sleep(measureInterval * time.Second)
       select {
       case <-sessionChannel:
         fmt.Printf("[%d] Stop session process\n", id)
