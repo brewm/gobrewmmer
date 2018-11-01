@@ -2,21 +2,23 @@ package main
 
 import (
   "os"
-  "log"
-  "fmt"
   "database/sql"
   _ "github.com/mattn/go-sqlite3"
 
   "github.com/gin-gonic/gin"
+  log "github.com/sirupsen/logrus"
 
-  conn "github.com/brewm/gobrewmmer/pkg/connections"
+  global "github.com/brewm/gobrewmmer/pkg/global"
   temp "github.com/brewm/gobrewmmer/pkg/temperature"
 )
 
-func main() {
+func init() {
+  initLogger()
   initDB()
-  defer conn.BrewmmerDB.Close()
+}
 
+func main() {
+  defer global.BrewmDB.Close()
 
   router := gin.Default()
 
@@ -40,6 +42,10 @@ func main() {
   router.Run() // listen and serve on 0.0.0.0:8080
 }
 
+func initLogger() {
+  log.SetLevel(log.InfoLevel)
+  log.SetOutput(os.Stderr)
+}
 
 func initDB() {
   dbPath := getEnv("DB_PATH", "./brewmmer.db")
@@ -47,15 +53,22 @@ func initDB() {
 
   _, fileErr := os.Stat(dbPath)
   if os.IsNotExist(fileErr) {
-    log.Fatalf("Database file '%s' doesn't exist.", dbPath)
+    log.WithFields(log.Fields{
+      "dbPath": dbPath,
+    }).Fatal("Database file doesn't exist!")
   }
 
   var dbErr error
-  conn.BrewmmerDB, dbErr = sql.Open("sqlite3", dbPath)
+  global.BrewmDB, dbErr = sql.Open("sqlite3", dbPath)
   if dbErr != nil {
-    log.Fatal(dbErr)
+    log.WithFields(log.Fields{
+      "err": dbErr,
+    }).Fatal("Database connection failed!")
   }
-  fmt.Printf("INFO: Database connection to '%s' was successfull!\n", dbPath)
+
+  log.WithFields(log.Fields{
+    "dbPath": dbPath,
+  }).Info("Database connection was successfull!")
 }
 
 func getEnv(key, fallback string) string {

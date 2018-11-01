@@ -1,15 +1,15 @@
 package temperature
 
 import (
-  "fmt"
   "time"
   "strconv"
   "net/http"
 
   "github.com/gin-gonic/gin"
+  log "github.com/sirupsen/logrus"
 
   "github.com/brewm/gobrewmmer/pkg/ds18b20"
-  conn "github.com/brewm/gobrewmmer/pkg/connections"
+  global "github.com/brewm/gobrewmmer/pkg/global"
 )
 
 var sessionChannel chan struct{}
@@ -48,7 +48,7 @@ func AllSession(c *gin.Context) {
 }
 
 func fetchAllSession(sessions *[]Session) error {
-  rows, err := conn.BrewmmerDB.Query(`
+  rows, err := global.BrewmDB.Query(`
     SELECT
       id,
       start_time,
@@ -120,7 +120,7 @@ func fetchSingleSession(session *Session) error {
       note
     FROM sessions
     WHERE id=$1`
-  row := conn.BrewmmerDB.QueryRow(sqlStatement, session.Id)
+  row := global.BrewmDB.QueryRow(sqlStatement, session.Id)
 
   var nullableStopTime *time.Time
 
@@ -157,7 +157,7 @@ func fetchMeasurements(session *Session) error {
     FROM measurements
     WHERE session_id=$1`
 
-  rows, err := conn.BrewmmerDB.Query(sqlStatement, session.Id)
+  rows, err := global.BrewmDB.Query(sqlStatement, session.Id)
 
   if err != nil {
     return err
@@ -197,7 +197,7 @@ func StartSession(c *gin.Context) {
     INSERT INTO sessions (start_time, note)
     VALUES ($1, $2)`
 
-  result, err := conn.BrewmmerDB.Exec(sqlStatement, time.Now(), note)
+  result, err := global.BrewmDB.Exec(sqlStatement, time.Now(), note)
   if err != nil {
     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
   }
@@ -226,10 +226,14 @@ func startSessionProcess(id int) {
       time.Sleep(measureInterval * time.Second)
       select {
       case <-sessionChannel:
-        fmt.Printf("[%d] Stop session process\n", id)
+        log.WithFields(log.Fields{
+          "session_id": id,
+        }).Info("Stopping active session!")
         return
       default: // adding default will make it not block
-        fmt.Printf("[%d] Rolling to next iteration\n", id)
+        log.WithFields(log.Fields{
+          "session_id": id,
+        }).Debug("Rolling to next measurement!")
       }
     }
   }(id)
@@ -240,9 +244,12 @@ func insertTemperature(id int) {
     INSERT INTO measurements (session_id, timestamp, temperature)
     VALUES ($1, $2, $3);`
 
-  _, err := conn.BrewmmerDB.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
+  _, err := global.BrewmDB.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
   if err != nil {
-    fmt.Printf("ERROR: temperature recording failed for session with id '%d'\n", id)
+    log.WithFields(log.Fields{
+      "session_id": id,
+    }).Error("Failed to save measurement!")
+
   }
 }
 

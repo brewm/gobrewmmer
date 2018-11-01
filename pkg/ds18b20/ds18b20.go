@@ -6,6 +6,8 @@ import (
   "strconv"
   "io/ioutil"
 
+  log "github.com/sirupsen/logrus"
+
   // "periph.io/x/periph/host"
   // "periph.io/x/periph/conn/onewire/onewirereg"
   // "periph.io/x/periph/devices/ds18b20"
@@ -17,7 +19,9 @@ func ReadTemperature() float64 {
   sensorPath := fmt.Sprintf("/sys/bus/w1/devices/%s/w1_slave", sensorId)
   data, err := ioutil.ReadFile(sensorPath)
   if err != nil {
-    fmt.Printf("ERROR: %s\n", err)
+    log.WithFields(log.Fields{
+      "err": err,
+    }).Error("Reading temperature data failed!")
     return 0.0
   }
 
@@ -26,7 +30,10 @@ func ReadTemperature() float64 {
 
   t, err := strconv.ParseFloat(tString, 64)
   if err != nil {
-    fmt.Printf("ERROR: %s\n", err)
+    log.WithFields(log.Fields{
+      "err": err,
+    }).Error("Parsing temperature data failed!")
+
     return 0.0
   }
 
