@@ -8,14 +8,14 @@ import (
   "github.com/gin-gonic/gin"
   log "github.com/sirupsen/logrus"
 
+  "github.com/brewm/gobrewmmer/pkg/brewmapi"
   global "github.com/brewm/gobrewmmer/pkg/global"
-  temp "github.com/brewm/gobrewmmer/pkg/temperature"
 )
 
 func init() {
   initLogger()
   initDB()
-  temp.RestartActiveSession()
+  brewmapi.RestartActiveSession()
 }
 
 func main() {
@@ -31,13 +31,13 @@ func main() {
 
   v1 := router.Group("/v1/")
 
-  v1.GET("/sense", temp.Sense)
+  v1.GET("/sense", brewmapi.Sense)
   sessions := v1.Group("/sessions")
   {
-    sessions.GET("/",    temp.AllSession)
-    sessions.GET("/:id", temp.SingleSession)
-    sessions.POST("/",   temp.StartSession)
-    sessions.PUT("/",    temp.StopSession)
+    sessions.GET("/",    brewmapi.AllSession)
+    sessions.GET("/:id", brewmapi.SingleSession)
+    sessions.POST("/",   brewmapi.StartSession)
+    sessions.PUT("/",    brewmapi.StopSession)
   }
 
   router.Run() // listen and serve on 0.0.0.0:8080

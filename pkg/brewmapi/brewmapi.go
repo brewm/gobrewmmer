@@ -1,4 +1,4 @@
-package temperature
+package brewmapi
 
 import (
   "time"
