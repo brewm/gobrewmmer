@@ -15,6 +15,7 @@ import (
 func init() {
   initLogger()
   initDB()
+  temp.RestartActiveSession()
 }
 
 func main() {

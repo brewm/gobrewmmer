@@ -210,6 +210,9 @@ func StartSession(c *gin.Context) {
     return
   }
 
+  log.WithFields(log.Fields{
+    "session_id": int(sessionId),
+  }).Info("Starting new session process!")
   startSessionProcess(int(sessionId))
 
   c.JSON(http.StatusOK, gin.H{
@@ -254,7 +257,6 @@ func insertTemperature(id int) {
     log.WithFields(log.Fields{
       "session_id": id,
     }).Error("Failed to save measurement!")
-
   }
 }
 
@@ -279,7 +281,7 @@ func StopSession(c *gin.Context) {
 
   if err != nil {
     c.JSON(http.StatusInternalServerError, gin.H{
-      "message": "Checking session with the given id was unsuccesfull!",
+      "message": "Checking session with the given id failed!",
       "id": id,
       "error": err.Error(),
     })
@@ -304,7 +306,11 @@ func StopSession(c *gin.Context) {
   }
 
   if sessionChannel != nil {
+    log.WithFields(log.Fields{
+      "session_id": id,
+    }).Info("Stopping session background process!")
     close(sessionChannel)
+    sessionChannel = nil
   }
 
   c.JSON(http.StatusOK, gin.H{
@@ -314,3 +320,31 @@ func StopSession(c *gin.Context) {
   })
 }
 
+func RestartActiveSession() {
+  sqlStatement := `
+    SELECT MAX(id), (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
+    FROM sessions`
+  row := global.BrewmDB.QueryRow(sqlStatement)
+
+  var id int
+  var isActive bool
+
+  err := row.Scan(
+    &id,
+    &isActive,
+  )
+
+  if err != nil {
+    log.WithFields(log.Fields{
+      "error": err.Error(),
+    }).Error("Checking active sessions failed!")
+    return
+  }
+
+  if isActive == true {
+    log.WithFields(log.Fields{
+      "session_id": id,
+    }).Info("Re-starting session process after an apiserver restart!")
+    startSessionProcess(id)
+  }
+}
