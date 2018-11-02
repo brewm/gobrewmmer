@@ -187,29 +187,34 @@ func fetchMeasurements(session *Session) error {
 
 func StartSession(c *gin.Context) {
   if sessionChannel != nil {
-    c.JSON(http.StatusBadRequest, gin.H{"error": "Session is already in progress. One session can be actibe at a time."})
+    c.JSON(http.StatusBadRequest, gin.H{"error": "Session is already in progress. One session can be active at a time."})
     return
   }
 
   note := c.PostForm("note")
+  timestamp := time.Now()
 
   sqlStatement := `
     INSERT INTO sessions (start_time, note)
     VALUES ($1, $2)`
 
-  result, err := global.BrewmDB.Exec(sqlStatement, time.Now(), note)
+  result, err := global.BrewmDB.Exec(sqlStatement, timestamp, note)
   if err != nil {
     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+    return
   }
 
-  sessionId, err :=result.LastInsertId()
+  sessionId, err := result.LastInsertId()
   if err != nil {
     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+    return
   }
 
   startSessionProcess(int(sessionId))
 
   c.JSON(http.StatusOK, gin.H{
+    "message": "Session started.",
+    "start_time": timestamp,
     "id": sessionId,
   })
 }
@@ -254,10 +259,58 @@ func insertTemperature(id int) {
 }
 
 func StopSession(c *gin.Context) {
-  if sessionChannel == nil {
-    c.JSON(http.StatusBadRequest, gin.H{"error": "There is no active session. Nothing to stop!"})
+  log.Info(c)
+
+  id := c.PostForm("id")
+
+  if id == "" {
+    c.JSON(http.StatusBadRequest, gin.H{"error": "No id found. Provide session id to stop."})
     return
   }
-  close(sessionChannel)
+
+  sqlStatement := `
+    SELECT (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
+    FROM sessions
+    WHERE id = $1`
+  row := global.BrewmDB.QueryRow(sqlStatement, id)
+
+  var isActive bool
+  err := row.Scan(&isActive)
+
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{
+      "message": "Checking session with the given id was unsuccesfull!",
+      "id": id,
+      "error": err.Error(),
+    })
+    return
+  }
+
+  if isActive == false {
+    c.JSON(http.StatusBadRequest, gin.H{"error": "Given session is not active. Can't stop."})
+    return
+  }
+
+  sqlStatement = `
+    UPDATE sessions
+    SET stop_time = $1
+    WHERE id = $2`
+
+  timestamp := time.Now()
+
+  _, err = global.BrewmDB.Exec(sqlStatement, timestamp, id)
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+  }
+
+  if sessionChannel != nil {
+    close(sessionChannel)
+  }
+
+  c.JSON(http.StatusOK, gin.H{
+    "message": "Session stopped.",
+    "stop_time": timestamp,
+    "id": id,
+  })
 }
 
