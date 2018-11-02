@@ -14,9 +14,12 @@ import (
 
 const version = "0.1"
 
-const endpoint = "http://localhost:8080/"
+var endpoint string
 
 func main() {
+  endpoint = getEnv("BREWM_ENDPOINT", "http://localhost:8080/")
+
+
   app := cli.NewApp()
   app.Name = "brewmctl"
   app.Usage = "command line interface to control brewmmer"
@@ -25,7 +28,7 @@ func main() {
   app.Commands = []cli.Command{
     {
       Name:  "get",
-      Usage: "Get <resource>",
+      Usage: "get <resource>",
       Subcommands: cli.Commands{
         cli.Command{
           Name:   "temperature",
@@ -159,4 +162,11 @@ func requestWrapper(method string, endpoint string, payload *url.Values) (string
   }
 
   return string(body), nil
+}
+
+func getEnv(key, fallback string) string {
+  if value, ok := os.LookupEnv(key); ok {
+    return value
+  }
+  return fallback
 }
