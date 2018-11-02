@@ -8,6 +8,7 @@ import (
   "net/http"
   "net/url"
   "io/ioutil"
+  "encoding/json"
 
   "github.com/urfave/cli"
 )
@@ -92,7 +93,9 @@ func getSessions(c *cli.Context) error {
     return err
   }
 
-  fmt.Println(data)
+  var out bytes.Buffer
+  json.Indent(&out, data, "", "\t")
+  out.WriteTo(os.Stdout)
 
   return nil
 }
@@ -106,7 +109,7 @@ func startSession(c *cli.Context) error {
     return err
   }
 
-  fmt.Println(data)
+  fmt.Println(string(data))
 
   return nil
 }
@@ -128,12 +131,12 @@ func stopSession(c *cli.Context) error {
     return err
   }
 
-  fmt.Println(data)
+  fmt.Println(string(data))
 
   return nil
 }
 
-func requestWrapper(method string, endpoint string, payload *url.Values) (string, error) {
+func requestWrapper(method string, endpoint string, payload *url.Values) ([]byte, error) {
   var req *http.Request
   var err error
 
@@ -144,13 +147,13 @@ func requestWrapper(method string, endpoint string, payload *url.Values) (string
   }
 
   if err != nil {
-    return "", err
+    return nil, err
   }
   req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
 
   res, err := http.DefaultClient.Do(req)
   if err != nil {
-    return "", err
+    return nil, err
   }
 
 
@@ -158,10 +161,10 @@ func requestWrapper(method string, endpoint string, payload *url.Values) (string
 
   body, err := ioutil.ReadAll(res.Body)
   if err != nil {
-    return "", err
+    return nil, err
   }
 
-  return string(body), nil
+  return body, nil
 }
 
 func getEnv(key, fallback string) string {
