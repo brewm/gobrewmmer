@@ -7,12 +7,12 @@ A semi automated brewing machine implemented in Go.
 ## Server
 API server endpoints
 ```
-GET    /ping
-GET    /v1/sense
-GET    /v1/sessions/
-GET    /v1/sessions/:id
-POST   /v1/sessions/
-PUT    /v1/sessions/
+GET    /ping                 - Ping
+GET    /v1/sense             - Get the current temperature from the sensor
+GET    /v1/sessions/         - Get all session information
+GET    /v1/sessions/:id      - Get one session with all of the recorded measurements
+POST   /v1/sessions/         - Create new session and start a goroutine to record temperature measurements
+PUT    /v1/sessions/         - Stop session / stop goroutine
 ```
 
 Start the server
@@ -36,9 +36,9 @@ VERSION:
    0.1
 
 COMMANDS:
-     get      get <resource>
-     start    start <process>
-     stop     stop <process>
+     get      get <temperature|sessions>
+     start    start <session|tbd...>
+     stop     stop <session|tbd...>
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:

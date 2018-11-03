@@ -29,7 +29,7 @@ func main() {
   app.Commands = []cli.Command{
     {
       Name:  "get",
-      Usage: "get <resource>",
+      Usage: "get <temperature|sessions>",
       Subcommands: cli.Commands{
         cli.Command{
           Name:   "temperature",
@@ -44,7 +44,7 @@ func main() {
     },
     {
       Name:  "start",
-      Usage: "start <process>",
+      Usage: "start <session|tbd...>",
       Subcommands: cli.Commands{
         cli.Command{
           Name:   "session",
@@ -57,7 +57,7 @@ func main() {
     },
     {
       Name:  "stop",
-      Usage: "stop <process>",
+      Usage: "stop <session|tbd...>",
       Subcommands: cli.Commands{
         cli.Command{
           Name:   "session",
