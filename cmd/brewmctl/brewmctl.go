@@ -18,7 +18,7 @@ const version = "0.1"
 var endpoint string
 
 func main() {
-  endpoint = getEnv("BREWM_ENDPOINT", "http://localhost:8080/")
+  endpoint = getEnv("BREWM_ENDPOINT", "http://localhost:8080")
 
 
   app := cli.NewApp()
@@ -76,7 +76,7 @@ func main() {
 
 
 func getTemperature(c *cli.Context) error {
-  data, err := requestWrapper("GET", endpoint + "v1/sense/", nil)
+  data, err := requestWrapper("GET", endpoint + "/v1/sense/", nil)
   if err != nil {
     return err
   }
@@ -88,7 +88,7 @@ func getTemperature(c *cli.Context) error {
 
 
 func getSessions(c *cli.Context) error {
-  data, err := requestWrapper("GET", endpoint + "v1/sessions/", nil)
+  data, err := requestWrapper("GET", endpoint + "/v1/sessions/", nil)
   if err != nil {
     return err
   }
@@ -104,7 +104,7 @@ func startSession(c *cli.Context) error {
   payload := url.Values{}
   payload.Set("note", c.String("note"))
 
-  data, err := requestWrapper("POST", endpoint + "v1/sessions/", &payload)
+  data, err := requestWrapper("POST", endpoint + "/v1/sessions/", &payload)
   if err != nil {
     return err
   }
@@ -126,7 +126,7 @@ func stopSession(c *cli.Context) error {
   payload := url.Values{}
   payload.Set("id", id)
 
-  data, err := requestWrapper("PUT", endpoint + "v1/sessions/", &payload)
+  data, err := requestWrapper("PUT", endpoint + "/v1/sessions/", &payload)
   if err != nil {
     return err
   }
