@@ -49,7 +49,7 @@ func initLogger() {
 }
 
 func initDB() {
-  dbPath := getEnv("DB_PATH", "./brewmmer.db")
+  dbPath := getEnv("BREWM_DB_PATH", "./brewmmer.db")
 
 
   _, fileErr := os.Stat(dbPath)
