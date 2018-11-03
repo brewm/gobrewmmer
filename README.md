@@ -4,6 +4,23 @@
 A semi automated brewing machine implemented in Go.
 
 
+## Server
+API server endpoints
+```
+GET    /ping
+GET    /v1/sense
+GET    /v1/sessions/
+GET    /v1/sessions/:id
+POST   /v1/sessions/
+PUT    /v1/sessions/
+```
+
+Start the server
+```
+$ BREWM_DB_PATH=/var/lib/brewm/brewm.db brewmserver &
+```
+
+
 ## CLI
 
 ```
