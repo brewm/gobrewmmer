@@ -17,7 +17,15 @@ from: https://gist.github.com/random-robbie/1f7f94beda1221b8125b62abe35f45b6
 TODO: use godeps
 
 ## Setup database
+```
 sqlite3 /path/to/brewmmer.db < ./scripts/setup_db.sql
+```
+
+Note:
+You can seed the database with some test data
+```
+sqlite3 /path/to/brewmmer.db < ./scripts/seed_test_data.sql
+```
 
 # GoBrewmmer
 
