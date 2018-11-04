@@ -38,6 +38,7 @@ func main() {
         cli.Command{
           Name:   "sessions",
           Action: getSessions,
+          ArgsUsage: "<id>",
           Flags: []cli.Flag{
             cli.BoolFlag{Name: "active"},
           },
@@ -91,8 +92,21 @@ func getTemperature(c *cli.Context) error {
 func getSessions(c *cli.Context) error {
   url := endpoint + "/v1/sessions"
 
-  if c.Bool("active") {
-    url += "?active=true"
+  activeFlag := c.Bool("active")
+
+  switch {
+    case c.NArg() == 0 && activeFlag:
+      url += "?active=true"
+    case c.NArg() == 1:
+      url += "/" + c.Args().Get(0)
+    case c.NArg() == 1 && activeFlag:
+      fmt.Println("ERROR: Argument and active flag can't be used togather!")
+      cli.ShowSubcommandHelp(c)
+      return nil
+    case c.NArg() > 1:
+      fmt.Println("ERROR: Only one argument is accepted!")
+      cli.ShowSubcommandHelp(c)
+      return nil
   }
 
   data, err := requestWrapper("GET", url, nil)
