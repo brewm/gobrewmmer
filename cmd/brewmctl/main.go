@@ -79,12 +79,12 @@ func main() {
 
 
 func getTemperature(c *cli.Context) error {
-  data, err := requestWrapper("GET", endpoint + "/v1/sense/", nil)
+  data, err := requestWrapper("GET", endpoint + "/v1/sense", nil)
   if err != nil {
     return err
   }
 
-  fmt.Println(data)
+  prettyJsonPrint(data)
 
   return nil
 }
@@ -114,9 +114,7 @@ func getSessions(c *cli.Context) error {
     return err
   }
 
-  var out bytes.Buffer
-  json.Indent(&out, data, "", "\t")
-  out.WriteTo(os.Stdout)
+  prettyJsonPrint(data)
 
   return nil
 }
@@ -186,6 +184,12 @@ func requestWrapper(method string, url string, payload *url.Values) ([]byte, err
   }
 
   return body, nil
+}
+
+func prettyJsonPrint(data []byte) {
+  var out bytes.Buffer
+  json.Indent(&out, data, "", "\t")
+  out.WriteTo(os.Stdout)
 }
 
 func getEnv(key, fallback string) string {
