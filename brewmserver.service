@@ -1,0 +1,16 @@
+[Unit]
+Description=Brewmserver
+Documentation=
+ConditionPathExists=/home/pi/go/bin/brewmserver
+After=network.target
+
+[Service]
+Environment=BREWM_DB_PATH=/var/lib/brewm/brewm.db
+ExecStart=/home/pi/go/bin/brewmserver
+
+Restart=always
+RestartSec=10
+startLimitIntervalSec=60
+
+[Install]
+WantedBy=multi-user.target
