@@ -31,7 +31,6 @@ type Measurement struct {
   Temperature float64   `json:"temperature"`
 }
 
-
 func Sense(c *gin.Context) {
   m := Measurement{Timestamp: time.Now(), Temperature: ds18b20.ReadTemperature()}
   c.JSON(200, m)
@@ -40,7 +39,14 @@ func Sense(c *gin.Context) {
 func AllSession(c *gin.Context) {
   sessions := []Session{}
 
-  if err := fetchAllSession(&sessions); err == nil {
+  var err error
+  if c.Query("active") == "true" {
+    err = fetchActiveSession(&sessions)
+  } else {
+    err = fetchAllSession(&sessions)
+  }
+
+  if err == nil {
     c.JSON(http.StatusOK, sessions)
   } else {
     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -93,6 +99,46 @@ func fetchAllSession(sessions *[]Session) error {
   return nil
 }
 
+func fetchActiveSession(sessions *[]Session) error {
+  // Making sure to return only one session
+  sqlStatement := `
+    SELECT
+      MAX(id),
+      start_time,
+      stop_time,
+      note
+    FROM sessions
+    WHERE stop_time IS NULL`
+  row := global.BrewmDB.QueryRow(sqlStatement)
+
+  var nullableStopTime *time.Time
+
+  s := Session{}
+  err := row.Scan(
+    &s.Id,
+    &s.StartTime,
+    &nullableStopTime,
+    &s.Note,
+  )
+
+  if err != nil {
+    return err
+  }
+
+  if nullableStopTime != nil {
+    s.StopTime = *nullableStopTime
+  } else {
+    s.StopTime = *new(time.Time)
+  }
+
+  err = fetchMeasurements(&s)
+  if err != nil {
+    return err
+  }
+
+  *sessions = append(*sessions, s)
+  return nil
+}
 
 func SingleSession(c *gin.Context) {
   session := Session{}

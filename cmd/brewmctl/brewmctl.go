@@ -38,9 +38,11 @@ func main() {
         cli.Command{
           Name:   "sessions",
           Action: getSessions,
+          Flags: []cli.Flag{
+            cli.BoolFlag{Name: "active"},
+          },
         },
       },
-
     },
     {
       Name:  "start",
@@ -86,9 +88,14 @@ func getTemperature(c *cli.Context) error {
   return nil
 }
 
-
 func getSessions(c *cli.Context) error {
-  data, err := requestWrapper("GET", endpoint + "/v1/sessions/", nil)
+  url := endpoint + "/v1/sessions"
+
+  if c.Bool("active") {
+    url += "?active=true"
+  }
+
+  data, err := requestWrapper("GET", url, nil)
   if err != nil {
     return err
   }
@@ -136,14 +143,14 @@ func stopSession(c *cli.Context) error {
   return nil
 }
 
-func requestWrapper(method string, endpoint string, payload *url.Values) ([]byte, error) {
+func requestWrapper(method string, url string, payload *url.Values) ([]byte, error) {
   var req *http.Request
   var err error
 
   if payload != nil {
-    req, err = http.NewRequest(method, endpoint, bytes.NewBufferString(payload.Encode()))
+    req, err = http.NewRequest(method, url, bytes.NewBufferString(payload.Encode()))
   } else {
-    req, err = http.NewRequest(method, endpoint, nil)
+    req, err = http.NewRequest(method, url, nil)
   }
 
   if err != nil {
