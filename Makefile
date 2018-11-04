@@ -10,12 +10,12 @@ install-brewmctl:
 install-brewmserver:
 	go install -v ./cmd/brewmserver
 
-install-all: install-deps install-brewmctl install-brewmserver
+install-all: install-brewmctl install-brewmserver
 
 
 build-local:
-	go build -v -o ./build/brewmctl ./cmd/brewmctl/brewmctl.go
-	go build -v -o ./build/brewmserver ./cmd/brewmserver/brewmserver.go
+	go build -v -o ./build/brewmctl ./cmd/brewmctl/main.go
+	go build -v -o ./build/brewmserver ./cmd/brewmserver/main.go
 
 builder:
 	docker build -t brewm-builder -f ./build.Dockerfile .
@@ -24,7 +24,7 @@ build-pi:
 	docker run --rm -v ${GOPATH}:/go -w ${GOPATH}/src/github.com/brewm/gobrewmmer \
 	  -e "GOOS=linux" -e "GOARCH=arm" -e "GOARM=6" -e "CGO_ENABLED=1" brewm-builder:latest \
 	  go build -v -o /go/src/github.com/brewm/gobrewmmer/build/pi/brewmserver \
-	 /go/src/github.com/brewm/gobrewmmer/cmd/brewmserver/brewmserver.go
+	 /go/src/github.com/brewm/gobrewmmer/cmd/brewmserver/main.go
 
 build-all: clean build-local build-pi
 

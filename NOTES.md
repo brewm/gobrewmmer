@@ -18,13 +18,13 @@ TODO: use godeps
 
 ## Setup database
 ```
-sqlite3 /path/to/brewmmer.db < ./scripts/setup_db.sql
+sqlite3 /path/to/brewmmer.db < ./scripts/db_setup.sql
 ```
 
 Note:
 You can seed the database with some test data
 ```
-sqlite3 /path/to/brewmmer.db < ./scripts/seed_test_data.sql
+sqlite3 /path/to/brewmmer.db < ./scripts/db_seed.sql
 ```
 
 # GoBrewmmer

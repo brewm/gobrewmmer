@@ -1,4 +1,4 @@
-package connections
+package global
 
 import (
   "database/sql"

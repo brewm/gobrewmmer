@@ -8,8 +8,8 @@ import (
   "github.com/gin-gonic/gin"
   log "github.com/sirupsen/logrus"
 
-  "github.com/brewm/gobrewmmer/pkg/brewmapi"
-  global "github.com/brewm/gobrewmmer/pkg/global"
+  "github.com/brewm/gobrewmmer/cmd/brewmserver/brewmapi"
+  "github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 )
 
 func init() {

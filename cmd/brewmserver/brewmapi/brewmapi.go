@@ -8,8 +8,8 @@ import (
   "github.com/gin-gonic/gin"
   log "github.com/sirupsen/logrus"
 
-  "github.com/brewm/gobrewmmer/pkg/ds18b20"
-  global "github.com/brewm/gobrewmmer/pkg/global"
+  "github.com/brewm/gobrewmmer/cmd/brewmserver/ds18b20"
+  "github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 )
 
 var sessionChannel chan struct{}
