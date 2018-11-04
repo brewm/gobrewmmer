@@ -22,9 +22,10 @@ $ BREWM_DB_PATH=/var/lib/brewm/brewm.db brewmserver &
 
 
 ## CLI
+Check the help content to see the available commands:
 
 ```
-$ brewmctl
+$ brewmctl --help
 
 NAME:
    brewmctl - command line interface to control brewmmer
@@ -46,7 +47,20 @@ GLOBAL OPTIONS:
    --version, -v  print the version
 ```
 
-`brewmctl` can work remotely, e.g.
+Subcommand help is also available:
+```
+$ brewmctl get sessions --help
+NAME:
+   brewmctl get sessions -
+
+USAGE:
+   brewmctl get sessions [command options] <id>
+
+OPTIONS:
+   --active
+```
+
+To connect to a remote `brewmserver` set the `BREWM_ENDPOINT` env variable:
 ```
 BREWM_ENDPOINT=http://192.168.0.22:8080 brewmctl get sessions
 ```
