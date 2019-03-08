@@ -3,8 +3,8 @@ package brewmmer
 import (
 	"context"
 
-	"github.com/brewm/gobrewmmer/cmd/brewmserver/ds18b20"
 	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
+	"github.com/brewm/gobrewmmer/pkg/service/ds18b20"
 	"github.com/golang/protobuf/ptypes"
 )
 

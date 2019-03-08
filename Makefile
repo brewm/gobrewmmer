@@ -10,10 +10,7 @@ install-brewmctl:
 install-brewmserver:
 	go install -v ./cmd/brewmserver
 
-install-grpc-server:
-	go install -v ./cmd/grpc-server
-
-install-all: install-brewmctl install-grpc-server
+install-all: install-brewmctl install-brewmserver
 
 
 build-local:

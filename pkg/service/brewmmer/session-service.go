@@ -7,9 +7,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/brewm/gobrewmmer/cmd/brewmserver/ds18b20"
 	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
+	"github.com/brewm/gobrewmmer/pkg/service/ds18b20"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
