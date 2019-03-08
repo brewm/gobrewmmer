@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 service SessionService {
   rpc Get (GetSessionRequest) returns (GetSessionResponse);
-  rpc GetActive (GetSessionRequest) returns (GetSessionResponse);
+  rpc GetActive (GetActiveSessionRequest) returns (GetSessionResponse);
   rpc List (ListSessionRequest) returns (ListSessionResponse);
   rpc Start (StartSessionRequest) returns (StartSessionResponse);
   rpc Stop (StopSessionRequest) returns (StopSessionResponse);
@@ -20,6 +20,9 @@ message GetSessionRequest {
 message GetSessionResponse {
   Session session = 1;
 }
+
+message GetActiveSessionRequest {}
+
 
 message StartSessionRequest {
   Session session = 1;

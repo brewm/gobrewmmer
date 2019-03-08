@@ -17,6 +17,7 @@ import (
 	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 )
@@ -134,8 +135,6 @@ func getTemperature(c *cli.Context) error {
 }
 
 func getSessions(c *cli.Context) error {
-	url := endpoint + "/v1/sessions"
-
 	activeFlag := c.Bool("active")
 
 	switch {
@@ -144,31 +143,43 @@ func getSessions(c *cli.Context) error {
 		res, err := sClient.List(ctx, &req)
 		if err != nil {
 			fmt.Printf("ERROR: Grpc call failed: %v", err)
+			return err
 		}
-
 		prettyPrintSessions(res.Sessions)
-		return nil
 
 	case c.NArg() == 0 && activeFlag:
-		url += "?active=true"
+		req := brewmmer.GetActiveSessionRequest{}
+		res, err := sClient.GetActive(ctx, &req)
+		if err != nil {
+			fmt.Printf("ERROR: Grpc call failed: %v", err)
+			return err
+		}
+		prettyPrintSession(res.Session)
+
 	case c.NArg() == 1:
-		url += "/" + c.Args().Get(0)
+		id, err := strconv.ParseInt(c.Args().Get(0), 10, 64)
+		if err != nil {
+			fmt.Printf("Failed to parese id as integer!")
+			return err
+		}
+		req := brewmmer.GetSessionRequest{
+			Id: id,
+		}
+		res, err := sClient.Get(ctx, &req)
+		if err != nil {
+			fmt.Printf("ERROR: Grpc call failed: %v", err)
+			return err
+		}
+		prettyPrintSession(res.Session)
+
 	case c.NArg() == 1 && activeFlag:
 		fmt.Println("ERROR: Argument and active flag can't be used togather!")
 		cli.ShowSubcommandHelp(c)
-		return nil
+
 	case c.NArg() > 1:
 		fmt.Println("ERROR: Only one argument is accepted!")
 		cli.ShowSubcommandHelp(c)
-		return nil
 	}
-
-	data, err := requestWrapper("GET", url, nil)
-	if err != nil {
-		return err
-	}
-
-	prettyJsonPrint(data)
 
 	return nil
 }
@@ -330,9 +341,33 @@ func prettyJsonPrint(data []byte) {
 }
 
 func prettyPrintSessions(ss []*brewmmer.Session) {
+	var maybeTimestamp func(*timestamp.Timestamp) string
+	maybeTimestamp = func(t *timestamp.Timestamp) string {
+		if t != nil {
+			return ptypes.TimestampString(t)
+		}
+		return "-"
+	}
+
 	fmt.Println("ID", "\t", "StartTime", "\t", "StopTime", "\t", "Note")
 	for _, s := range ss {
-		fmt.Println(s.Id, "\t", ptypes.TimestampString(s.StartTime), "\t", ptypes.TimestampString(s.StopTime), "\t", s.Note)
+		fmt.Println(s.Id, "\t", ptypes.TimestampString(s.StartTime), "\t", maybeTimestamp(s.StopTime), "\t", s.Note)
+	}
+}
+
+func prettyPrintSession(s *brewmmer.Session) {
+	fmt.Println("Note: ", s.Note)
+	fmt.Println("Start Time: ", ptypes.TimestampString(s.StartTime))
+	if s.StopTime != nil {
+		fmt.Println("Stop Time: ", ptypes.TimestampString(s.StopTime))
+	} else {
+		fmt.Println("Stop Time: ", "-")
+	}
+	fmt.Println("Measurements: ")
+
+	fmt.Println("\t", "Timestamp", "\t", "Temperature")
+	for _, m := range s.Measurements {
+		fmt.Println("\t", ptypes.TimestampString(m.Timestamp), "\t", m.Temperature)
 	}
 }
 
@@ -345,22 +380,22 @@ func prettyPrintRecepie(r *brewmmer.Recepie) {
 		return ""
 	}
 
-	fmt.Println("\tName: ", r.Name)
-	fmt.Println("\tDescription: ", r.Description)
-	fmt.Println("\tIngredients: ")
-	fmt.Println("\t\t", "Type", "\t", "Name", "\t", "Quantity")
+	fmt.Println("Name: ", r.Name)
+	fmt.Println("Description: ", r.Description)
+	fmt.Println("Ingredients: ")
+	fmt.Println("\t", "Type", "\t", "Name", "\t", "Quantity")
 	for _, i := range r.Ingredients {
-		fmt.Println("\t\t", i.Type, "\t", i.Name, "\t", quantityToStr(i.Quantity))
+		fmt.Println("\t", i.Type, "\t", i.Name, "\t", quantityToStr(i.Quantity))
 	}
-	fmt.Println("\tSteps: ")
-	fmt.Println("\t\t", "Phase", "\t", "Temperature", "\t", "Duration")
+	fmt.Println("Steps: ")
+	fmt.Println("\t", "Phase", "\t", "Temperature", "\t", "Duration")
 	for _, s := range r.Steps {
-		fmt.Println("\t\t", s.Phase, "\t", s.Temperature, "\t", quantityToStr(s.Duration))
+		fmt.Println("\t", s.Phase, "\t", s.Temperature, "\t", quantityToStr(s.Duration))
 		if len(s.Ingredients) != 0 {
-			fmt.Println("\t\t\t", "Type", "\t", "Name", "\t", "Quantity")
+			fmt.Println("\t\t", "Type", "\t", "Name", "\t", "Quantity")
 		}
 		for _, si := range s.Ingredients {
-			fmt.Println("\t\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
+			fmt.Println("\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
 		}
 	}
 }
