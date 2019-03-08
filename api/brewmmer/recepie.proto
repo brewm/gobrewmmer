@@ -87,13 +87,13 @@ enum Phase {
 
 message Step {
   Phase phase = 1;
-  int32 temperature = 2;
+  int64 temperature = 2;
   Quantity duration = 3;
   repeated Ingredient ingredients = 4;
 }
 
 message Recipe {
-  int32 id = 1;
+  int64 id = 1;
   string name = 2;
   string description = 3;
   repeated Ingredient ingredients = 4;

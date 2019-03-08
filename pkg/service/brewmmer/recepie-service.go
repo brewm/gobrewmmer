@@ -19,6 +19,9 @@ func NewRecipeServiceServer() brewmmer.RecipeServiceServer {
 
 func (s *recipeServiceServer) Create(ctx context.Context, req *brewmmer.CreateRecipeRequest) (*brewmmer.CreateRecipeResponse, error) {
 	m := jsonpb.Marshaler{}
+
+	// reset id
+	req.Recipe.Id = 0
 	recipeJson, err := m.MarshalToString(req.Recipe)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "json marshaling error-> "+err.Error())
@@ -30,7 +33,6 @@ func (s *recipeServiceServer) Create(ctx context.Context, req *brewmmer.CreateRe
 		return nil, status.Error(codes.Unknown, "failed to insert into Recipe-> "+err.Error())
 	}
 
-	// get ID of creates ToDo
 	id, err := res.LastInsertId()
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to retrieve id for created Recipe-> "+err.Error())
@@ -53,14 +55,16 @@ func (s *recipeServiceServer) Get(ctx context.Context, req *brewmmer.GetRecipeRe
 	row.Scan(&recipeJson)
 
 	um := jsonpb.Unmarshaler{}
-	unserialized := &brewmmer.Recipe{}
-	err := um.Unmarshal(strings.NewReader(recipeJson), unserialized)
+	recipe := &brewmmer.Recipe{}
+	err := um.Unmarshal(strings.NewReader(recipeJson), recipe)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
 	}
 
+	// Fix ID
+	recipe.Id = req.Id
 	return &brewmmer.GetRecipeResponse{
-		Recipe: unserialized,
+		Recipe: recipe,
 	}, nil
 }
 
@@ -77,7 +81,8 @@ func (s *recipeServiceServer) List(ctx context.Context, req *brewmmer.ListRecipe
 	um := jsonpb.Unmarshaler{}
 
 	rows, err := global.BrewmDB.Query(`
-    SELECT
+		SELECT
+		  id,
       recipe
     FROM recipes`)
 
@@ -87,9 +92,12 @@ func (s *recipeServiceServer) List(ctx context.Context, req *brewmmer.ListRecipe
 	defer rows.Close()
 
 	for rows.Next() {
-
+		var id *int64
 		var recipeJson *string
-		err = rows.Scan(&recipeJson)
+		err = rows.Scan(
+			&id,
+			&recipeJson,
+		)
 
 		recipe := &brewmmer.Recipe{}
 		err := um.Unmarshal(strings.NewReader(*recipeJson), recipe)
@@ -97,6 +105,8 @@ func (s *recipeServiceServer) List(ctx context.Context, req *brewmmer.ListRecipe
 			return nil, status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
 		}
 
+		// Fix ID
+		recipe.Id = *id
 		recipes = append(recipes, recipe)
 	}
 	err = rows.Err()
