@@ -1,42 +1,42 @@
 syntax = "proto3";
 
-package recepie;
+package brewmmer;
 
 import "google/protobuf/empty.proto";
 
 service RecepieService {
-  rpc Get    (GetRequest)    returns (GetResponse);
-  rpc Create (CreateRequest) returns (CreateResponse);
-  rpc Update (UpdateRequest) returns (google.protobuf.Empty);
-  rpc Delete (DeleteRequest) returns (google.protobuf.Empty);
-  rpc List   (google.protobuf.Empty)   returns (ListResponse);
+  rpc Get    (GetRecepieRequest)    returns (GetRecepieResponse);
+  rpc Create (CreateRecepieRequest) returns (CreateRecepieResponse);
+  rpc Update (UpdateRecepieRequest) returns (google.protobuf.Empty);
+  rpc Delete (DeleteRecepieRequest) returns (google.protobuf.Empty);
+  rpc List   (google.protobuf.Empty)   returns (ListRecepieResponse);
 }
 
-message GetRequest {
+message GetRecepieRequest {
   int64 id = 1;
 }
 
-message GetResponse {
+message GetRecepieResponse {
   Recepie recepie = 1;
 }
 
-message CreateRequest {
+message CreateRecepieRequest {
   Recepie recepie = 1;
 }
 
-message CreateResponse {
+message CreateRecepieResponse {
   int64 id = 1;
 }
 
-message UpdateRequest {
+message UpdateRecepieRequest {
   Recepie recepie = 1;
 }
 
-message DeleteRequest {
+message DeleteRecepieRequest {
   int64 id = 1;
 }
 
-message ListResponse {
+message ListRecepieResponse {
   repeated Recepie recepies = 1;
 }
 

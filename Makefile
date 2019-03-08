@@ -32,8 +32,7 @@ build-pi:
 build-all: clean build-local build-pi
 
 generate-code:
-	protoc --go_out=plugins=grpc:./pkg ./api/recepie/*.proto
-	protoc --go_out=plugins=grpc:./pkg ./api/session/*.proto
+	protoc --go_out=plugins=grpc:./pkg ./api/brewmmer/*.proto
 
 proto-test:
 	go run ./api/recepie-test.go

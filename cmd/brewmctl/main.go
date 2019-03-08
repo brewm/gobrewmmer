@@ -14,8 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/brewm/gobrewmmer/pkg/api/recepie"
-	"github.com/brewm/gobrewmmer/pkg/api/session"
+	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/urfave/cli"
@@ -26,8 +25,8 @@ const version = "0.2"
 
 var endpoint string
 
-var rClient recepie.RecepieServiceClient
-var sClient session.SessionServiceClient
+var rClient brewmmer.RecepieServiceClient
+var sClient brewmmer.SessionServiceClient
 var ctx context.Context
 
 func main() {
@@ -39,8 +38,8 @@ func main() {
 	}
 	defer conn.Close()
 
-	rClient = recepie.NewRecepieServiceClient(conn)
-	sClient = session.NewSessionServiceClient(conn)
+	rClient = brewmmer.NewRecepieServiceClient(conn)
+	sClient = brewmmer.NewSessionServiceClient(conn)
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
@@ -141,7 +140,7 @@ func getSessions(c *cli.Context) error {
 
 	switch {
 	case c.NArg() == 0 && !activeFlag:
-		req := session.ListRequest{}
+		req := brewmmer.ListSessionRequest{}
 		res, err := sClient.List(ctx, &req)
 		if err != nil {
 			fmt.Printf("ERROR: Grpc call failed: %v", err)
@@ -221,14 +220,14 @@ func createRecepie(c *cli.Context) error {
 
 	// Unmarshal json string to Recepie struct
 	um := jsonpb.Unmarshaler{}
-	unserialized := &recepie.Recepie{}
+	unserialized := &brewmmer.Recepie{}
 	err := um.Unmarshal(strings.NewReader(json), unserialized)
 	if err != nil {
 		fmt.Printf("json unmarshaling error: %v", err)
 	}
 
 	// Call Create
-	req := recepie.CreateRequest{
+	req := brewmmer.CreateRecepieRequest{
 		Recepie: unserialized,
 	}
 	res, err := rClient.Create(ctx, &req)
@@ -269,7 +268,7 @@ func getRecepieWithID(id string, raw bool) error {
 		return err
 	}
 
-	req := recepie.GetRequest{
+	req := brewmmer.GetRecepieRequest{
 		Id: i,
 	}
 	res, err := rClient.Get(ctx, &req)
@@ -330,16 +329,16 @@ func prettyJsonPrint(data []byte) {
 	out.WriteTo(os.Stdout)
 }
 
-func prettyPrintSessions(ss []*session.Session) {
+func prettyPrintSessions(ss []*brewmmer.Session) {
 	fmt.Println("ID", "\t", "StartTime", "\t", "StopTime", "\t", "Note")
 	for _, s := range ss {
 		fmt.Println(s.Id, "\t", ptypes.TimestampString(s.StartTime), "\t", ptypes.TimestampString(s.StopTime), "\t", s.Note)
 	}
 }
 
-func prettyPrintRecepie(r *recepie.Recepie) {
-	var quantityToStr func(*recepie.Quantity) string
-	quantityToStr = func(q *recepie.Quantity) string {
+func prettyPrintRecepie(r *brewmmer.Recepie) {
+	var quantityToStr func(*brewmmer.Quantity) string
+	quantityToStr = func(q *brewmmer.Quantity) string {
 		if q != nil {
 			return fmt.Sprint(q.Volume, " ", q.Unit)
 		}

@@ -1,11 +1,11 @@
-package recepie
+package brewmmer
 
 import (
 	"context"
 	"strings"
 
 	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
-	"github.com/brewm/gobrewmmer/pkg/api/recepie"
+	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
@@ -14,11 +14,11 @@ import (
 
 type recepieServiceServer struct{}
 
-func NewRecepieServiceServer() recepie.RecepieServiceServer {
+func NewRecepieServiceServer() brewmmer.RecepieServiceServer {
 	return &recepieServiceServer{}
 }
 
-func (s *recepieServiceServer) Create(ctx context.Context, req *recepie.CreateRequest) (*recepie.CreateResponse, error) {
+func (s *recepieServiceServer) Create(ctx context.Context, req *brewmmer.CreateRecepieRequest) (*brewmmer.CreateRecepieResponse, error) {
 	m := jsonpb.Marshaler{}
 	recepieJson, err := m.MarshalToString(req.Recepie)
 	if err != nil {
@@ -37,12 +37,12 @@ func (s *recepieServiceServer) Create(ctx context.Context, req *recepie.CreateRe
 		return nil, status.Error(codes.Unknown, "failed to retrieve id for created Recepie-> "+err.Error())
 	}
 
-	return &recepie.CreateResponse{
+	return &brewmmer.CreateRecepieResponse{
 		Id: id,
 	}, nil
 }
 
-func (s *recepieServiceServer) Get(ctx context.Context, req *recepie.GetRequest) (*recepie.GetResponse, error) {
+func (s *recepieServiceServer) Get(ctx context.Context, req *brewmmer.GetRecepieRequest) (*brewmmer.GetRecepieResponse, error) {
 	sqlStatement := `
     SELECT
       recepie
@@ -54,25 +54,25 @@ func (s *recepieServiceServer) Get(ctx context.Context, req *recepie.GetRequest)
 	row.Scan(&recepieJson)
 
 	um := jsonpb.Unmarshaler{}
-	unserialized := &recepie.Recepie{}
+	unserialized := &brewmmer.Recepie{}
 	err := um.Unmarshal(strings.NewReader(recepieJson), unserialized)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
 	}
 
-	return &recepie.GetResponse{
+	return &brewmmer.GetRecepieResponse{
 		Recepie: unserialized,
 	}, nil
 }
 
-func (s *recepieServiceServer) Delete(ctx context.Context, req *recepie.DeleteRequest) (*empty.Empty, error) {
+func (s *recepieServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecepieRequest) (*empty.Empty, error) {
 	return nil, nil
 }
 
-func (s *recepieServiceServer) Update(ctx context.Context, req *recepie.UpdateRequest) (*empty.Empty, error) {
+func (s *recepieServiceServer) Update(ctx context.Context, req *brewmmer.UpdateRecepieRequest) (*empty.Empty, error) {
 	return nil, nil
 }
 
-func (s *recepieServiceServer) List(ctx context.Context, empty *empty.Empty) (*recepie.ListResponse, error) {
-	return &recepie.ListResponse{}, nil
+func (s *recepieServiceServer) List(ctx context.Context, empty *empty.Empty) (*brewmmer.ListRecepieResponse, error) {
+	return &brewmmer.ListRecepieResponse{}, nil
 }

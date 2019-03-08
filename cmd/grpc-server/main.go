@@ -11,8 +11,7 @@ import (
 
 	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 	"github.com/brewm/gobrewmmer/pkg/protocol/grpc"
-	"github.com/brewm/gobrewmmer/pkg/service/recepie"
-	"github.com/brewm/gobrewmmer/pkg/service/session"
+	"github.com/brewm/gobrewmmer/pkg/service/brewmmer"
 )
 
 func init() {
@@ -26,8 +25,8 @@ func main() {
 
 	ctx := context.Background()
 
-	recepieAPI := recepie.NewRecepieServiceServer()
-	sessionAPI := session.NewSessionServiceServer()
+	recepieAPI := brewmmer.NewRecepieServiceServer()
+	sessionAPI := brewmmer.NewSessionServiceServer()
 
 	// listen and serve on localhost:6999
 	grpc.RunServer(ctx, recepieAPI, sessionAPI, "6999")

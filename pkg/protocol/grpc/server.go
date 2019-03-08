@@ -7,14 +7,12 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"google.golang.org/grpc"
-
-	"github.com/brewm/gobrewmmer/pkg/api/recepie"
-	"github.com/brewm/gobrewmmer/pkg/api/session"
 )
 
 // RunServer runs gRPC service to publish ToDo service
-func RunServer(ctx context.Context, recepieAPI recepie.RecepieServiceServer, sessionAPI session.SessionServiceServer, port string) error {
+func RunServer(ctx context.Context, recepieAPI brewmmer.RecepieServiceServer, sessionAPI brewmmer.SessionServiceServer, port string) error {
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
@@ -22,8 +20,8 @@ func RunServer(ctx context.Context, recepieAPI recepie.RecepieServiceServer, ses
 
 	// register service
 	server := grpc.NewServer()
-	recepie.RegisterRecepieServiceServer(server, recepieAPI)
-	session.RegisterSessionServiceServer(server, sessionAPI)
+	brewmmer.RegisterRecepieServiceServer(server, recepieAPI)
+	brewmmer.RegisterSessionServiceServer(server, sessionAPI)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)
