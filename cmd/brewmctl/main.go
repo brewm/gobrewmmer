@@ -260,8 +260,13 @@ func getRecepies(c *cli.Context) error {
 	switch {
 	case c.NArg() == 0:
 		// Get all recepies
-		// TODO: implement call
-		fmt.Println("ERROR: Not implemented yet!")
+		req := brewmmer.ListRecepieRequest{}
+		res, err := rClient.List(ctx, &req)
+		if err != nil {
+			fmt.Printf("Grpc call failed.")
+			return err
+		}
+		prettyPrintRecepies(res.Recepies)
 	case c.NArg() == 1:
 		// Get recepie with id
 		id := c.Args().Get(0)
@@ -339,6 +344,13 @@ func prettyPrintSession(s *brewmmer.Session) {
 	fmt.Println("\t", "Timestamp", "\t", "Temperature")
 	for _, m := range s.Measurements {
 		fmt.Println("\t", ptypes.TimestampString(m.Timestamp), "\t", m.Temperature)
+	}
+}
+
+func prettyPrintRecepies(rs []*brewmmer.Recepie) {
+	fmt.Println("ID", "\t", "Name", "\t", "Description")
+	for _, r := range rs {
+		fmt.Println(r.Id, "\t", r.Name, "\t", r.Description)
 	}
 }
 

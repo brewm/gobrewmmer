@@ -2,14 +2,12 @@ syntax = "proto3";
 
 package brewmmer;
 
-import "google/protobuf/empty.proto";
-
 service RecepieService {
   rpc Get    (GetRecepieRequest)    returns (GetRecepieResponse);
   rpc Create (CreateRecepieRequest) returns (CreateRecepieResponse);
-  rpc Update (UpdateRecepieRequest) returns (google.protobuf.Empty);
-  rpc Delete (DeleteRecepieRequest) returns (google.protobuf.Empty);
-  rpc List   (google.protobuf.Empty)   returns (ListRecepieResponse);
+  rpc Update (UpdateRecepieRequest) returns (UpdateRecepieResponse);
+  rpc Delete (DeleteRecepieRequest) returns (DeleteRecepieResponse);
+  rpc List   (ListRecepieRequest)   returns (ListRecepieResponse);
 }
 
 message GetRecepieRequest {
@@ -32,9 +30,15 @@ message UpdateRecepieRequest {
   Recepie recepie = 1;
 }
 
+message UpdateRecepieResponse {}
+
 message DeleteRecepieRequest {
   int64 id = 1;
 }
+
+message DeleteRecepieResponse {}
+
+message ListRecepieRequest {}
 
 message ListRecepieResponse {
   repeated Recepie recepies = 1;
@@ -89,7 +93,7 @@ message Step {
 }
 
 message Recepie {
-  int32 uuid = 1;
+  int32 id = 1;
   string name = 2;
   string description = 3;
   repeated Ingredient ingredients = 4;

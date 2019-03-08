@@ -4,219 +4,219 @@ import (
 	"log"
 	"strings"
 
-	"github.com/brewm/gobrewmmer/api/recepie"
+	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 )
 
 func main() {
-	recepieStruct := &recepie.Recepie{
-		Uuid:        1,
+	recepieStruct := &brewmmer.Recepie{
+		Id:          1,
 		Name:        "Little Cub IPA - Bronze Cub",
 		Description: "Brown IPA",
-		Ingredients: []*recepie.Ingredient{
+		Ingredients: []*brewmmer.Ingredient{
 			{
-				Type: recepie.IngredientType_WATER,
+				Type: brewmmer.IngredientType_WATER,
 				Name: "Init water",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 32,
-					Unit:   recepie.Unit_L,
+					Unit:   brewmmer.Unit_L,
 				},
 			},
 			{
-				Type: recepie.IngredientType_WATER,
+				Type: brewmmer.IngredientType_WATER,
 				Name: "Sparge water",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 25,
-					Unit:   recepie.Unit_L,
+					Unit:   brewmmer.Unit_L,
 				},
 			},
 			{
-				Type: recepie.IngredientType_MALT,
+				Type: brewmmer.IngredientType_MALT,
 				Name: "Pale Ale",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 8,
-					Unit:   recepie.Unit_KG,
+					Unit:   brewmmer.Unit_KG,
 				},
 			},
 			{
-				Type: recepie.IngredientType_MALT,
+				Type: brewmmer.IngredientType_MALT,
 				Name: "Crystal",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 1.5,
-					Unit:   recepie.Unit_KG,
+					Unit:   brewmmer.Unit_KG,
 				},
 			},
 			{
-				Type: recepie.IngredientType_HOPS,
+				Type: brewmmer.IngredientType_HOPS,
 				Name: "Tomahawk",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 75,
-					Unit:   recepie.Unit_G,
+					Unit:   brewmmer.Unit_G,
 				},
 			},
 			{
-				Type: recepie.IngredientType_HOPS,
+				Type: brewmmer.IngredientType_HOPS,
 				Name: "Cascade",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 80,
-					Unit:   recepie.Unit_G,
+					Unit:   brewmmer.Unit_G,
 				},
 			},
 			{
-				Type: recepie.IngredientType_HOPS,
+				Type: brewmmer.IngredientType_HOPS,
 				Name: "Citra",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 170,
-					Unit:   recepie.Unit_G,
+					Unit:   brewmmer.Unit_G,
 				},
 			},
 			{
-				Type: recepie.IngredientType_YIEST,
+				Type: brewmmer.IngredientType_YIEST,
 				Name: "Safale US-05",
-				Quantity: &recepie.Quantity{
+				Quantity: &brewmmer.Quantity{
 					Volume: 20,
-					Unit:   recepie.Unit_G,
+					Unit:   brewmmer.Unit_G,
 				},
 			}},
-		Steps: []*recepie.Step{
+		Steps: []*brewmmer.Step{
 			{
-				Phase:       recepie.Phase_INIT,
+				Phase:       brewmmer.Phase_INIT,
 				Temperature: 55,
-				Ingredients: []*recepie.Ingredient{
+				Ingredients: []*brewmmer.Ingredient{
 					{
-						Type: recepie.IngredientType_WATER,
+						Type: brewmmer.IngredientType_WATER,
 						Name: "Init water",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 32,
-							Unit:   recepie.Unit_L,
+							Unit:   brewmmer.Unit_L,
 						},
 					},
 					{
-						Type: recepie.IngredientType_MALT,
+						Type: brewmmer.IngredientType_MALT,
 						Name: "Pale Ale",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 8,
-							Unit:   recepie.Unit_KG,
+							Unit:   brewmmer.Unit_KG,
 						},
 					},
 					{
-						Type: recepie.IngredientType_MALT,
+						Type: brewmmer.IngredientType_MALT,
 						Name: "Crystal",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 1.5,
-							Unit:   recepie.Unit_KG,
+							Unit:   brewmmer.Unit_KG,
 						},
 					},
 				},
 			},
 			{
-				Phase:       recepie.Phase_MASHING,
+				Phase:       brewmmer.Phase_MASHING,
 				Temperature: 55,
-				Duration: &recepie.Quantity{
+				Duration: &brewmmer.Quantity{
 					Volume: 30,
-					Unit:   recepie.Unit_MIN,
+					Unit:   brewmmer.Unit_MIN,
 				},
 			},
 			{
-				Phase:       recepie.Phase_MASHING,
+				Phase:       brewmmer.Phase_MASHING,
 				Temperature: 65,
-				Duration: &recepie.Quantity{
+				Duration: &brewmmer.Quantity{
 					Volume: 45,
-					Unit:   recepie.Unit_MIN,
+					Unit:   brewmmer.Unit_MIN,
 				},
 			},
 			{
-				Phase:       recepie.Phase_MASHING,
+				Phase:       brewmmer.Phase_MASHING,
 				Temperature: 78,
-				Duration: &recepie.Quantity{
+				Duration: &brewmmer.Quantity{
 					Volume: 45,
-					Unit:   recepie.Unit_MIN,
+					Unit:   brewmmer.Unit_MIN,
 				},
 			},
 			{
-				Phase:       recepie.Phase_SPARGING,
+				Phase:       brewmmer.Phase_SPARGING,
 				Temperature: 55,
-				Ingredients: []*recepie.Ingredient{
+				Ingredients: []*brewmmer.Ingredient{
 					{
-						Type: recepie.IngredientType_WATER,
+						Type: brewmmer.IngredientType_WATER,
 						Name: "Sparge water",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 25,
-							Unit:   recepie.Unit_L,
+							Unit:   brewmmer.Unit_L,
 						},
 					},
 				},
 			},
 			{
-				Phase: recepie.Phase_BOILING,
-				Ingredients: []*recepie.Ingredient{
+				Phase: brewmmer.Phase_BOILING,
+				Ingredients: []*brewmmer.Ingredient{
 					{
-						Type: recepie.IngredientType_HOPS,
+						Type: brewmmer.IngredientType_HOPS,
 						Name: "Tomahawk",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 75,
-							Unit:   recepie.Unit_G,
+							Unit:   brewmmer.Unit_G,
 						},
 					},
 				},
-				Duration: &recepie.Quantity{
+				Duration: &brewmmer.Quantity{
 					Volume: 60,
-					Unit:   recepie.Unit_MIN,
+					Unit:   brewmmer.Unit_MIN,
 				},
 			},
 			{
-				Phase: recepie.Phase_BOILING,
-				Ingredients: []*recepie.Ingredient{
+				Phase: brewmmer.Phase_BOILING,
+				Ingredients: []*brewmmer.Ingredient{
 					{
-						Type: recepie.IngredientType_HOPS,
+						Type: brewmmer.IngredientType_HOPS,
 						Name: "Cascade",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 80,
-							Unit:   recepie.Unit_G,
+							Unit:   brewmmer.Unit_G,
 						},
 					},
 				},
-				Duration: &recepie.Quantity{
+				Duration: &brewmmer.Quantity{
 					Volume: 10,
-					Unit:   recepie.Unit_MIN,
+					Unit:   brewmmer.Unit_MIN,
 				},
 			},
 			{
-				Phase: recepie.Phase_BOILING,
-				Ingredients: []*recepie.Ingredient{
+				Phase: brewmmer.Phase_BOILING,
+				Ingredients: []*brewmmer.Ingredient{
 					{
-						Type: recepie.IngredientType_HOPS,
+						Type: brewmmer.IngredientType_HOPS,
 						Name: "Citra",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 75,
-							Unit:   recepie.Unit_G,
+							Unit:   brewmmer.Unit_G,
 						},
 					},
 				},
 			},
 			{
-				Phase: recepie.Phase_FERMENTATION,
-				Duration: &recepie.Quantity{
+				Phase: brewmmer.Phase_FERMENTATION,
+				Duration: &brewmmer.Quantity{
 					Volume: 7,
-					Unit:   recepie.Unit_DAY,
+					Unit:   brewmmer.Unit_DAY,
 				},
 			},
 			{
-				Phase: recepie.Phase_FERMENTATION,
-				Ingredients: []*recepie.Ingredient{
+				Phase: brewmmer.Phase_FERMENTATION,
+				Ingredients: []*brewmmer.Ingredient{
 					{
-						Type: recepie.IngredientType_HOPS,
+						Type: brewmmer.IngredientType_HOPS,
 						Name: "Citra",
-						Quantity: &recepie.Quantity{
+						Quantity: &brewmmer.Quantity{
 							Volume: 95,
-							Unit:   recepie.Unit_G,
+							Unit:   brewmmer.Unit_G,
 						},
 					},
 				},
-				Duration: &recepie.Quantity{
+				Duration: &brewmmer.Quantity{
 					Volume: 7,
-					Unit:   recepie.Unit_DAY,
+					Unit:   brewmmer.Unit_DAY,
 				},
 			},
 		},
@@ -226,7 +226,7 @@ func main() {
 	if err != nil {
 		log.Fatal("marshaling error: ", err)
 	}
-	serialized := &recepie.Recepie{}
+	serialized := &brewmmer.Recepie{}
 	err = proto.Unmarshal(data, serialized)
 	if err != nil {
 		log.Fatal("unmarshaling error: ", err)
@@ -240,7 +240,7 @@ func main() {
 	println(recepieJson)
 
 	um := jsonpb.Unmarshaler{}
-	unserialized := &recepie.Recepie{}
+	unserialized := &brewmmer.Recepie{}
 	err = um.Unmarshal(strings.NewReader(recepieJson), unserialized)
 	if err != nil {
 		log.Fatal("json unmarshaling error: ", err)

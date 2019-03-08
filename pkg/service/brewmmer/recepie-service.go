@@ -7,7 +7,6 @@ import (
 	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -65,14 +64,47 @@ func (s *recepieServiceServer) Get(ctx context.Context, req *brewmmer.GetRecepie
 	}, nil
 }
 
-func (s *recepieServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecepieRequest) (*empty.Empty, error) {
+func (s *recepieServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecepieRequest) (*brewmmer.DeleteRecepieResponse, error) {
 	return nil, nil
 }
 
-func (s *recepieServiceServer) Update(ctx context.Context, req *brewmmer.UpdateRecepieRequest) (*empty.Empty, error) {
+func (s *recepieServiceServer) Update(ctx context.Context, req *brewmmer.UpdateRecepieRequest) (*brewmmer.UpdateRecepieResponse, error) {
 	return nil, nil
 }
 
-func (s *recepieServiceServer) List(ctx context.Context, empty *empty.Empty) (*brewmmer.ListRecepieResponse, error) {
-	return &brewmmer.ListRecepieResponse{}, nil
+func (s *recepieServiceServer) List(ctx context.Context, req *brewmmer.ListRecepieRequest) (*brewmmer.ListRecepieResponse, error) {
+	recepies := []*brewmmer.Recepie{}
+	um := jsonpb.Unmarshaler{}
+
+	rows, err := global.BrewmDB.Query(`
+    SELECT
+      recepie
+    FROM recepies`)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		var recepieJson *string
+		err = rows.Scan(&recepieJson)
+
+		recepie := &brewmmer.Recepie{}
+		err := um.Unmarshal(strings.NewReader(*recepieJson), recepie)
+		if err != nil {
+			return nil, status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
+		}
+
+		recepies = append(recepies, recepie)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return &brewmmer.ListRecepieResponse{
+		Recepies: recepies,
+	}, nil
 }
