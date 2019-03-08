@@ -32,7 +32,7 @@ generate-code:
 	protoc --go_out=plugins=grpc:./pkg ./api/brewmmer/*.proto
 
 proto-test:
-	go run ./api/recepie-test.go
+	go run ./api/recipe-test.go
 
 clean:
 	go clean

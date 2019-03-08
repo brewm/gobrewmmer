@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	recepieStruct := &brewmmer.Recepie{
+	recipeStruct := &brewmmer.Recipe{
 		Id:          1,
 		Name:        "Little Cub IPA - Bronze Cub",
 		Description: "Brown IPA",
@@ -222,35 +222,35 @@ func main() {
 		},
 	}
 
-	data, err := proto.Marshal(recepieStruct)
+	data, err := proto.Marshal(recipeStruct)
 	if err != nil {
 		log.Fatal("marshaling error: ", err)
 	}
-	serialized := &brewmmer.Recepie{}
+	serialized := &brewmmer.Recipe{}
 	err = proto.Unmarshal(data, serialized)
 	if err != nil {
 		log.Fatal("unmarshaling error: ", err)
 	}
 
 	m := jsonpb.Marshaler{}
-	recepieJson, err := m.MarshalToString(recepieStruct)
+	recipeJson, err := m.MarshalToString(recipeStruct)
 	if err != nil {
 		log.Fatal("json marshaling error: ", err)
 	}
-	println(recepieJson)
+	println(recipeJson)
 
 	um := jsonpb.Unmarshaler{}
-	unserialized := &brewmmer.Recepie{}
-	err = um.Unmarshal(strings.NewReader(recepieJson), unserialized)
+	unserialized := &brewmmer.Recipe{}
+	err = um.Unmarshal(strings.NewReader(recipeJson), unserialized)
 	if err != nil {
 		log.Fatal("json unmarshaling error: ", err)
 	}
 	println(unserialized)
 
-	recepieJson2, err := m.MarshalToString(unserialized)
+	recipeJson2, err := m.MarshalToString(unserialized)
 	if err != nil {
 		log.Fatal("json marshaling error: ", err)
 	}
-	println(recepieJson2)
+	println(recipeJson2)
 
 }

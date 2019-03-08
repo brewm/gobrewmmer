@@ -21,7 +21,7 @@ const version = "0.2"
 
 var endpoint string
 
-var rClient brewmmer.RecepieServiceClient
+var rClient brewmmer.RecipeServiceClient
 var sClient brewmmer.SessionServiceClient
 var tClient brewmmer.TemperatureServiceClient
 var ctx context.Context
@@ -37,7 +37,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	rClient = brewmmer.NewRecepieServiceClient(conn)
+	rClient = brewmmer.NewRecipeServiceClient(conn)
 	sClient = brewmmer.NewSessionServiceClient(conn)
 	tClient = brewmmer.NewTemperatureServiceClient(conn)
 
@@ -53,7 +53,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:  "get",
-			Usage: "get <temperature|sessions|recepies>",
+			Usage: "get <temperature|sessions|recipes>",
 			Subcommands: cli.Commands{
 				cli.Command{
 					Name:   "temperature",
@@ -68,8 +68,8 @@ func main() {
 					},
 				},
 				cli.Command{
-					Name:      "recepies",
-					Action:    getRecepies,
+					Name:      "recipes",
+					Action:    getRecipes,
 					ArgsUsage: "<id>",
 					Flags: []cli.Flag{
 						cli.BoolFlag{Name: "raw"},
@@ -103,11 +103,11 @@ func main() {
 		},
 		{
 			Name:  "create",
-			Usage: "create <recepie|tbd...>",
+			Usage: "create <recipe|tbd...>",
 			Subcommands: cli.Commands{
 				cli.Command{
-					Name:      "recepie",
-					Action:    createRecepie,
+					Name:      "recipe",
+					Action:    createRecipe,
 					ArgsUsage: "<json>",
 				},
 			},
@@ -223,7 +223,7 @@ func stopSession(c *cli.Context) error {
 	return nil
 }
 
-func createRecepie(c *cli.Context) error {
+func createRecipe(c *cli.Context) error {
 	if c.NArg() != 1 {
 		fmt.Println("ERROR: Missing command argument!")
 		cli.ShowSubcommandHelp(c)
@@ -232,45 +232,45 @@ func createRecepie(c *cli.Context) error {
 
 	json := c.Args().Get(0)
 
-	// Unmarshal json string to Recepie struct
+	// Unmarshal json string to Recipe struct
 	um := jsonpb.Unmarshaler{}
-	unserialized := &brewmmer.Recepie{}
+	unserialized := &brewmmer.Recipe{}
 	err := um.Unmarshal(strings.NewReader(json), unserialized)
 	if err != nil {
 		fmt.Printf("json unmarshaling error: %v", err)
 	}
 
 	// Call Create
-	req := brewmmer.CreateRecepieRequest{
-		Recepie: unserialized,
+	req := brewmmer.CreateRecipeRequest{
+		Recipe: unserialized,
 	}
 	res, err := rClient.Create(ctx, &req)
 	if err != nil {
 		fmt.Printf("ERROR: Grpc call failed: %v", err)
 	}
 
-	fmt.Printf("Created recepie with id: <%+v>", res.Id)
+	fmt.Printf("Created recipe with id: <%+v>", res.Id)
 
 	return nil
 }
 
-func getRecepies(c *cli.Context) error {
+func getRecipes(c *cli.Context) error {
 	rawFlag := c.Bool("raw")
 
 	switch {
 	case c.NArg() == 0:
-		// Get all recepies
-		req := brewmmer.ListRecepieRequest{}
+		// Get all recipes
+		req := brewmmer.ListRecipeRequest{}
 		res, err := rClient.List(ctx, &req)
 		if err != nil {
 			fmt.Printf("Grpc call failed.")
 			return err
 		}
-		prettyPrintRecepies(res.Recepies)
+		prettyPrintRecipes(res.Recipes)
 	case c.NArg() == 1:
-		// Get recepie with id
+		// Get recipe with id
 		id := c.Args().Get(0)
-		return getRecepieWithID(id, rawFlag)
+		return getRecipeWithID(id, rawFlag)
 	case c.NArg() > 1:
 		fmt.Println("ERROR: Max one argument is accepted!")
 		cli.ShowSubcommandHelp(c)
@@ -280,14 +280,14 @@ func getRecepies(c *cli.Context) error {
 	return nil
 }
 
-func getRecepieWithID(id string, raw bool) error {
+func getRecipeWithID(id string, raw bool) error {
 	i, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		fmt.Printf("Failed to parese id as integer!")
 		return err
 	}
 
-	req := brewmmer.GetRecepieRequest{
+	req := brewmmer.GetRecipeRequest{
 		Id: i,
 	}
 	res, err := rClient.Get(ctx, &req)
@@ -298,15 +298,15 @@ func getRecepieWithID(id string, raw bool) error {
 
 	if raw {
 		m := jsonpb.Marshaler{}
-		recepieJSON, err := m.MarshalToString(res.Recepie)
+		recipeJSON, err := m.MarshalToString(res.Recipe)
 		if err != nil {
 			fmt.Printf("JSON marshaling failed.")
 			return err
 		}
 
-		fmt.Printf(recepieJSON)
+		fmt.Printf(recipeJSON)
 	} else {
-		prettyPrintRecepie(res.Recepie)
+		prettyPrintRecipe(res.Recipe)
 	}
 
 	return nil
@@ -347,14 +347,14 @@ func prettyPrintSession(s *brewmmer.Session) {
 	}
 }
 
-func prettyPrintRecepies(rs []*brewmmer.Recepie) {
+func prettyPrintRecipes(rs []*brewmmer.Recipe) {
 	fmt.Println("ID", "\t", "Name", "\t", "Description")
 	for _, r := range rs {
 		fmt.Println(r.Id, "\t", r.Name, "\t", r.Description)
 	}
 }
 
-func prettyPrintRecepie(r *brewmmer.Recepie) {
+func prettyPrintRecipe(r *brewmmer.Recipe) {
 	var quantityToStr func(*brewmmer.Quantity) string
 	quantityToStr = func(q *brewmmer.Quantity) string {
 		if q != nil {

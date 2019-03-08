@@ -11,75 +11,75 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type recepieServiceServer struct{}
+type recipeServiceServer struct{}
 
-func NewRecepieServiceServer() brewmmer.RecepieServiceServer {
-	return &recepieServiceServer{}
+func NewRecipeServiceServer() brewmmer.RecipeServiceServer {
+	return &recipeServiceServer{}
 }
 
-func (s *recepieServiceServer) Create(ctx context.Context, req *brewmmer.CreateRecepieRequest) (*brewmmer.CreateRecepieResponse, error) {
+func (s *recipeServiceServer) Create(ctx context.Context, req *brewmmer.CreateRecipeRequest) (*brewmmer.CreateRecipeResponse, error) {
 	m := jsonpb.Marshaler{}
-	recepieJson, err := m.MarshalToString(req.Recepie)
+	recipeJson, err := m.MarshalToString(req.Recipe)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "json marshaling error-> "+err.Error())
 	}
 
-	sqlStatement := `INSERT INTO recepies (recepie) VALUES ($1)`
-	res, err := global.BrewmDB.Exec(sqlStatement, recepieJson)
+	sqlStatement := `INSERT INTO recipes (recipe) VALUES ($1)`
+	res, err := global.BrewmDB.Exec(sqlStatement, recipeJson)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to insert into Recepie-> "+err.Error())
+		return nil, status.Error(codes.Unknown, "failed to insert into Recipe-> "+err.Error())
 	}
 
 	// get ID of creates ToDo
 	id, err := res.LastInsertId()
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to retrieve id for created Recepie-> "+err.Error())
+		return nil, status.Error(codes.Unknown, "failed to retrieve id for created Recipe-> "+err.Error())
 	}
 
-	return &brewmmer.CreateRecepieResponse{
+	return &brewmmer.CreateRecipeResponse{
 		Id: id,
 	}, nil
 }
 
-func (s *recepieServiceServer) Get(ctx context.Context, req *brewmmer.GetRecepieRequest) (*brewmmer.GetRecepieResponse, error) {
+func (s *recipeServiceServer) Get(ctx context.Context, req *brewmmer.GetRecipeRequest) (*brewmmer.GetRecipeResponse, error) {
 	sqlStatement := `
     SELECT
-      recepie
-    FROM recepies
+      recipe
+    FROM recipes
     WHERE id=$1`
 	row := global.BrewmDB.QueryRow(sqlStatement, req.Id)
 
-	var recepieJson string
-	row.Scan(&recepieJson)
+	var recipeJson string
+	row.Scan(&recipeJson)
 
 	um := jsonpb.Unmarshaler{}
-	unserialized := &brewmmer.Recepie{}
-	err := um.Unmarshal(strings.NewReader(recepieJson), unserialized)
+	unserialized := &brewmmer.Recipe{}
+	err := um.Unmarshal(strings.NewReader(recipeJson), unserialized)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
 	}
 
-	return &brewmmer.GetRecepieResponse{
-		Recepie: unserialized,
+	return &brewmmer.GetRecipeResponse{
+		Recipe: unserialized,
 	}, nil
 }
 
-func (s *recepieServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecepieRequest) (*brewmmer.DeleteRecepieResponse, error) {
+func (s *recipeServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecipeRequest) (*brewmmer.DeleteRecipeResponse, error) {
 	return nil, nil
 }
 
-func (s *recepieServiceServer) Update(ctx context.Context, req *brewmmer.UpdateRecepieRequest) (*brewmmer.UpdateRecepieResponse, error) {
+func (s *recipeServiceServer) Update(ctx context.Context, req *brewmmer.UpdateRecipeRequest) (*brewmmer.UpdateRecipeResponse, error) {
 	return nil, nil
 }
 
-func (s *recepieServiceServer) List(ctx context.Context, req *brewmmer.ListRecepieRequest) (*brewmmer.ListRecepieResponse, error) {
-	recepies := []*brewmmer.Recepie{}
+func (s *recipeServiceServer) List(ctx context.Context, req *brewmmer.ListRecipeRequest) (*brewmmer.ListRecipeResponse, error) {
+	recipes := []*brewmmer.Recipe{}
 	um := jsonpb.Unmarshaler{}
 
 	rows, err := global.BrewmDB.Query(`
     SELECT
-      recepie
-    FROM recepies`)
+      recipe
+    FROM recipes`)
 
 	if err != nil {
 		return nil, err
@@ -88,23 +88,23 @@ func (s *recepieServiceServer) List(ctx context.Context, req *brewmmer.ListRecep
 
 	for rows.Next() {
 
-		var recepieJson *string
-		err = rows.Scan(&recepieJson)
+		var recipeJson *string
+		err = rows.Scan(&recipeJson)
 
-		recepie := &brewmmer.Recepie{}
-		err := um.Unmarshal(strings.NewReader(*recepieJson), recepie)
+		recipe := &brewmmer.Recipe{}
+		err := um.Unmarshal(strings.NewReader(*recipeJson), recipe)
 		if err != nil {
 			return nil, status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
 		}
 
-		recepies = append(recepies, recepie)
+		recipes = append(recipes, recipe)
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, err
 	}
 
-	return &brewmmer.ListRecepieResponse{
-		Recepies: recepies,
+	return &brewmmer.ListRecipeResponse{
+		Recipes: recipes,
 	}, nil
 }

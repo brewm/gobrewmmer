@@ -12,7 +12,7 @@ CREATE TABLE measurements (
    FOREIGN KEY (session_id) REFERENCES sessions (id)
 );
 
-CREATE TABLE recepies (
+CREATE TABLE recipes (
    id           INTEGER      PRIMARY KEY  NOT NULL,
-   recepie      TEXT
+   recipe      TEXT
 )

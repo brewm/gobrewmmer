@@ -2,46 +2,46 @@ syntax = "proto3";
 
 package brewmmer;
 
-service RecepieService {
-  rpc Get    (GetRecepieRequest)    returns (GetRecepieResponse);
-  rpc Create (CreateRecepieRequest) returns (CreateRecepieResponse);
-  rpc Update (UpdateRecepieRequest) returns (UpdateRecepieResponse);
-  rpc Delete (DeleteRecepieRequest) returns (DeleteRecepieResponse);
-  rpc List   (ListRecepieRequest)   returns (ListRecepieResponse);
+service RecipeService {
+  rpc Get    (GetRecipeRequest)    returns (GetRecipeResponse);
+  rpc Create (CreateRecipeRequest) returns (CreateRecipeResponse);
+  rpc Update (UpdateRecipeRequest) returns (UpdateRecipeResponse);
+  rpc Delete (DeleteRecipeRequest) returns (DeleteRecipeResponse);
+  rpc List   (ListRecipeRequest)   returns (ListRecipeResponse);
 }
 
-message GetRecepieRequest {
+message GetRecipeRequest {
   int64 id = 1;
 }
 
-message GetRecepieResponse {
-  Recepie recepie = 1;
+message GetRecipeResponse {
+  Recipe recipe = 1;
 }
 
-message CreateRecepieRequest {
-  Recepie recepie = 1;
+message CreateRecipeRequest {
+  Recipe recipe = 1;
 }
 
-message CreateRecepieResponse {
+message CreateRecipeResponse {
   int64 id = 1;
 }
 
-message UpdateRecepieRequest {
-  Recepie recepie = 1;
+message UpdateRecipeRequest {
+  Recipe recipe = 1;
 }
 
-message UpdateRecepieResponse {}
+message UpdateRecipeResponse {}
 
-message DeleteRecepieRequest {
+message DeleteRecipeRequest {
   int64 id = 1;
 }
 
-message DeleteRecepieResponse {}
+message DeleteRecipeResponse {}
 
-message ListRecepieRequest {}
+message ListRecipeRequest {}
 
-message ListRecepieResponse {
-  repeated Recepie recepies = 1;
+message ListRecipeResponse {
+  repeated Recipe recipes = 1;
 }
 
 
@@ -92,7 +92,7 @@ message Step {
   repeated Ingredient ingredients = 4;
 }
 
-message Recepie {
+message Recipe {
   int32 id = 1;
   string name = 2;
   string description = 3;
