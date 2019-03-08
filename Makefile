@@ -10,7 +10,10 @@ install-brewmctl:
 install-brewmserver:
 	go install -v ./cmd/brewmserver
 
-install-all: install-brewmctl install-brewmserver
+install-grpc-server:
+	go install -v ./cmd/grpc-server
+
+install-all: install-brewmctl install-grpc-server
 
 
 build-local:
@@ -28,6 +31,12 @@ build-pi:
 
 build-all: clean build-local build-pi
 
+generate-code:
+	protoc --go_out=plugins=grpc:./pkg ./api/recepie/*.proto
+	protoc --go_out=plugins=grpc:./pkg ./api/session/*.proto
+
+proto-test:
+	go run ./api/recepie-test.go
 
 clean:
 	go clean

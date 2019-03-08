@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package session;
+
+import "google/protobuf/timestamp.proto";
+
+
+service SessionService {
+  rpc Get (GetRequest) returns (GetResponse);
+  rpc List (ListRequest) returns (ListResponse);
+  rpc Start (StartRequest) returns (StartResponse);
+  rpc Stop (StopRequest) returns (StopResponse);
+}
+
+message GetRequest {
+  int64 id = 1;
+}
+
+message GetResponse {
+  Session session = 1;
+}
+
+message StartRequest {
+  Session session = 1;
+}
+
+message StartResponse {
+  int64 id = 1;
+}
+
+message StopRequest {
+  Session session = 1;
+}
+
+message StopResponse {}
+
+message ListRequest {}
+
+message ListResponse {
+  repeated Session sessions = 1;
+}
+
+
+
+
+message Session {
+  int64 id = 1;
+  google.protobuf.Timestamp startTime = 2;
+  google.protobuf.Timestamp stopTime = 3;
+  repeated Measurement measurements = 4;
+  string note = 5;
+}
+
+message Measurement {
+  google.protobuf.Timestamp timestamp = 1;
+  float Temperature = 2;
+}

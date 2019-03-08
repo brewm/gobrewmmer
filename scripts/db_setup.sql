@@ -12,3 +12,7 @@ CREATE TABLE measurements (
    FOREIGN KEY (session_id) REFERENCES sessions (id)
 );
 
+CREATE TABLE recepies (
+   id           INTEGER      PRIMARY KEY  NOT NULL,
+   recepie      TEXT
+)

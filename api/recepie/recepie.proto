@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package recepie;
+
+import "google/protobuf/empty.proto";
+
+service RecepieService {
+  rpc Get    (GetRequest)    returns (GetResponse);
+  rpc Create (CreateRequest) returns (CreateResponse);
+  rpc Update (UpdateRequest) returns (google.protobuf.Empty);
+  rpc Delete (DeleteRequest) returns (google.protobuf.Empty);
+  rpc List   (google.protobuf.Empty)   returns (ListResponse);
+}
+
+message GetRequest {
+  int64 id = 1;
+}
+
+message GetResponse {
+  Recepie recepie = 1;
+}
+
+message CreateRequest {
+  Recepie recepie = 1;
+}
+
+message CreateResponse {
+  int64 id = 1;
+}
+
+message UpdateRequest {
+  Recepie recepie = 1;
+}
+
+message DeleteRequest {
+  int64 id = 1;
+}
+
+message ListResponse {
+  repeated Recepie recepies = 1;
+}
+
+
+
+
+enum IngredientType {
+  NULL_INGREDIENT_TYPE = 0;
+  WATER = 1;
+  MALT = 2;
+  HOPS = 3;
+  YIEST = 4;
+}
+
+enum Unit {
+  NULL_UNIT = 0;
+  L = 1;
+  G = 2;
+  KG = 3;
+  MIN = 4;
+  DAY = 5;
+}
+
+message Quantity {
+  float volume = 1;
+  Unit unit = 2;
+}
+
+message Ingredient {
+  IngredientType type = 1;
+  string name = 2;
+  Quantity quantity = 3;
+}
+
+enum Phase {
+  INIT = 0;
+  MASHING = 1;
+  BOILING = 2;
+  SPARGING = 3;
+  CHILLING = 4;
+  FERMENTATION = 5;
+  BOTTLING = 6;
+}
+
+message Step {
+  Phase phase = 1;
+  int32 temperature = 2;
+  Quantity duration = 3;
+  repeated Ingredient ingredients = 4;
+}
+
+message Recepie {
+  int32 uuid = 1;
+  string name = 2;
+  string description = 3;
+  repeated Ingredient ingredients = 4;
+  repeated Step steps = 5;
+}

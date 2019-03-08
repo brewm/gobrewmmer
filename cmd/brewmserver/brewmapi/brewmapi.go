@@ -1,15 +1,15 @@
 package brewmapi
 
 import (
-  "time"
-  "strconv"
-  "net/http"
+	"net/http"
+	"strconv"
+	"time"
 
-  "github.com/gin-gonic/gin"
-  log "github.com/sirupsen/logrus"
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 
-  "github.com/brewm/gobrewmmer/cmd/brewmserver/ds18b20"
-  "github.com/brewm/gobrewmmer/cmd/brewmserver/global"
+	"github.com/brewm/gobrewmmer/cmd/brewmserver/ds18b20"
+	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 )
 
 var sessionChannel chan struct{}
@@ -18,43 +18,43 @@ var sessionChannel chan struct{}
 const measureInterval = 600
 
 type Session struct {
-  Id             int              `json:"id"`
-  StartTime      time.Time        `json:"startTime"`
-  StopTime       time.Time        `json:"stopTime"`
-  Measurements   []Measurement    `json:"measurements,omitempty"`
-  Note           string           `json:"note"`
+	Id           int           `json:"id"`
+	StartTime    time.Time     `json:"startTime"`
+	StopTime     time.Time     `json:"stopTime"`
+	Measurements []Measurement `json:"measurements,omitempty"`
+	Note         string        `json:"note"`
 }
 
 type Measurement struct {
-  SessionId   int       `json:"sessionId,omitempty"`
-  Timestamp   time.Time `json:"timestamp"`
-  Temperature float64   `json:"temperature"`
+	SessionId   int       `json:"sessionId,omitempty"`
+	Timestamp   time.Time `json:"timestamp"`
+	Temperature float64   `json:"temperature"`
 }
 
 func Sense(c *gin.Context) {
-  m := Measurement{Timestamp: time.Now(), Temperature: ds18b20.ReadTemperature()}
-  c.JSON(200, m)
+	m := Measurement{Timestamp: time.Now(), Temperature: ds18b20.ReadTemperature()}
+	c.JSON(200, m)
 }
 
 func AllSession(c *gin.Context) {
-  sessions := []Session{}
+	sessions := []Session{}
 
-  var err error
-  if c.Query("active") == "true" {
-    err = fetchActiveSession(&sessions)
-  } else {
-    err = fetchAllSession(&sessions)
-  }
+	var err error
+	if c.Query("active") == "true" {
+		err = fetchActiveSession(&sessions)
+	} else {
+		err = fetchAllSession(&sessions)
+	}
 
-  if err == nil {
-    c.JSON(http.StatusOK, sessions)
-  } else {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-  }
+	if err == nil {
+		c.JSON(http.StatusOK, sessions)
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 }
 
 func fetchAllSession(sessions *[]Session) error {
-  rows, err := global.BrewmDB.Query(`
+	rows, err := global.BrewmDB.Query(`
     SELECT
       id,
       start_time,
@@ -62,46 +62,46 @@ func fetchAllSession(sessions *[]Session) error {
       note
     FROM sessions`)
 
-  if err != nil {
-    return err
-  }
-  defer rows.Close()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
 
-  for rows.Next() {
-    // The sqlite driver can't handle nullable Time type so here is the workaround
-    var nullableStopTime *time.Time
+	for rows.Next() {
+		// The sqlite driver can't handle nullable Time type so here is the workaround
+		var nullableStopTime *time.Time
 
-    s := Session{}
-    err = rows.Scan(
-      &s.Id,
-      &s.StartTime,
-      &nullableStopTime,
-      &s.Note,
-    )
+		s := Session{}
+		err = rows.Scan(
+			&s.Id,
+			&s.StartTime,
+			&nullableStopTime,
+			&s.Note,
+		)
 
-    if err != nil {
-      return err
-    }
+		if err != nil {
+			return err
+		}
 
-    if nullableStopTime != nil {
-      s.StopTime = *nullableStopTime
-    } else {
-      s.StopTime = *new(time.Time)
-    }
+		if nullableStopTime != nil {
+			s.StopTime = *nullableStopTime
+		} else {
+			s.StopTime = *new(time.Time)
+		}
 
-    *sessions = append(*sessions, s)
-  }
-  err = rows.Err()
-  if err != nil {
-    return err
-  }
+		*sessions = append(*sessions, s)
+	}
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }
 
 func fetchActiveSession(sessions *[]Session) error {
-  // Making sure to return only one session
-  sqlStatement := `
+	// Making sure to return only one session
+	sqlStatement := `
     SELECT
       MAX(id),
       start_time,
@@ -109,56 +109,56 @@ func fetchActiveSession(sessions *[]Session) error {
       note
     FROM sessions
     WHERE stop_time IS NULL`
-  row := global.BrewmDB.QueryRow(sqlStatement)
+	row := global.BrewmDB.QueryRow(sqlStatement)
 
-  var nullableStopTime *time.Time
+	var nullableStopTime *time.Time
 
-  s := Session{}
-  err := row.Scan(
-    &s.Id,
-    &s.StartTime,
-    &nullableStopTime,
-    &s.Note,
-  )
+	s := Session{}
+	err := row.Scan(
+		&s.Id,
+		&s.StartTime,
+		&nullableStopTime,
+		&s.Note,
+	)
 
-  if err != nil {
-    return err
-  }
+	if err != nil {
+		return err
+	}
 
-  if nullableStopTime != nil {
-    s.StopTime = *nullableStopTime
-  } else {
-    s.StopTime = *new(time.Time)
-  }
+	if nullableStopTime != nil {
+		s.StopTime = *nullableStopTime
+	} else {
+		s.StopTime = *new(time.Time)
+	}
 
-  err = fetchMeasurements(&s)
-  if err != nil {
-    return err
-  }
+	err = fetchMeasurements(&s)
+	if err != nil {
+		return err
+	}
 
-  *sessions = append(*sessions, s)
-  return nil
+	*sessions = append(*sessions, s)
+	return nil
 }
 
 func SingleSession(c *gin.Context) {
-  session := Session{}
+	session := Session{}
 
-  id, err := strconv.Atoi(c.Param("id"))
-  if err != nil {
-    c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-  }
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 
-  session.Id = id
+	session.Id = id
 
-  if err := fetchSingleSession(&session); err == nil {
-    c.JSON(http.StatusOK, session)
-  } else {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-  }
+	if err := fetchSingleSession(&session); err == nil {
+		c.JSON(http.StatusOK, session)
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 }
 
 func fetchSingleSession(session *Session) error {
-  sqlStatement := `
+	sqlStatement := `
     SELECT
       id,
       start_time,
@@ -166,231 +166,231 @@ func fetchSingleSession(session *Session) error {
       note
     FROM sessions
     WHERE id=$1`
-  row := global.BrewmDB.QueryRow(sqlStatement, session.Id)
+	row := global.BrewmDB.QueryRow(sqlStatement, session.Id)
 
-  var nullableStopTime *time.Time
+	var nullableStopTime *time.Time
 
-  err := row.Scan(
-    &session.Id,
-    &session.StartTime,
-    &nullableStopTime,
-    &session.Note,
-  )
+	err := row.Scan(
+		&session.Id,
+		&session.StartTime,
+		&nullableStopTime,
+		&session.Note,
+	)
 
-  if err != nil {
-    return err
-  }
+	if err != nil {
+		return err
+	}
 
-  if nullableStopTime != nil {
-    session.StopTime = *nullableStopTime
-  } else {
-    session.StopTime = *new(time.Time)
-  }
+	if nullableStopTime != nil {
+		session.StopTime = *nullableStopTime
+	} else {
+		session.StopTime = *new(time.Time)
+	}
 
-  err = fetchMeasurements(session)
-  if err != nil {
-    return err
-  }
+	err = fetchMeasurements(session)
+	if err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }
 
 func fetchMeasurements(session *Session) error {
-  sqlStatement := `
+	sqlStatement := `
     SELECT
       timestamp,
       temperature
     FROM measurements
     WHERE session_id=$1`
 
-  rows, err := global.BrewmDB.Query(sqlStatement, session.Id)
+	rows, err := global.BrewmDB.Query(sqlStatement, session.Id)
 
-  if err != nil {
-    return err
-  }
-  defer rows.Close()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
 
-  for rows.Next() {
-    m := Measurement{}
-    err = rows.Scan(
-      &m.Timestamp,
-      &m.Temperature,
-    )
+	for rows.Next() {
+		m := Measurement{}
+		err = rows.Scan(
+			&m.Timestamp,
+			&m.Temperature,
+		)
 
-    if err != nil {
-      return err
-    }
+		if err != nil {
+			return err
+		}
 
-    session.Measurements = append(session.Measurements, m)
-  }
-  err = rows.Err()
-  if err != nil {
-    return err
-  }
+		session.Measurements = append(session.Measurements, m)
+	}
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }
 
 func StartSession(c *gin.Context) {
-  if sessionChannel != nil {
-    c.JSON(http.StatusBadRequest, gin.H{"error": "Session is already in progress. One session can be active at a time."})
-    return
-  }
+	if sessionChannel != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Session is already in progress. One session can be active at a time."})
+		return
+	}
 
-  note := c.PostForm("note")
-  timestamp := time.Now()
+	note := c.PostForm("note")
+	timestamp := time.Now()
 
-  sqlStatement := `
+	sqlStatement := `
     INSERT INTO sessions (start_time, note)
     VALUES ($1, $2)`
 
-  result, err := global.BrewmDB.Exec(sqlStatement, timestamp, note)
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-    return
-  }
+	result, err := global.BrewmDB.Exec(sqlStatement, timestamp, note)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-  sessionId, err := result.LastInsertId()
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-    return
-  }
+	sessionId, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-  log.WithFields(log.Fields{
-    "session_id": int(sessionId),
-  }).Info("Starting new session process!")
-  startSessionProcess(int(sessionId))
+	log.WithFields(log.Fields{
+		"session_id": int(sessionId),
+	}).Info("Starting new session process!")
+	startSessionProcess(int(sessionId))
 
-  c.JSON(http.StatusOK, gin.H{
-    "message": "Session started.",
-    "start_time": timestamp,
-    "id": sessionId,
-  })
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Session started.",
+		"start_time": timestamp,
+		"id":         sessionId,
+	})
 }
 
 func startSessionProcess(id int) {
-  sessionChannel = make(chan struct{})
+	sessionChannel = make(chan struct{})
 
-  // Start goroutine to periodically run the insert
-  go func(id int) {
-    for {
-      // Start goroutine to do an async insert
-      go insertTemperature(id)
+	// Start goroutine to periodically run the insert
+	go func(id int) {
+		for {
+			// Start goroutine to do an async insert
+			go insertTemperature(id)
 
-      time.Sleep(measureInterval * time.Second)
-      select {
-      case <-sessionChannel:
-        log.WithFields(log.Fields{
-          "session_id": id,
-        }).Info("Stopping active session!")
-        return
-      default: // adding default will make it not block
-        log.WithFields(log.Fields{
-          "session_id": id,
-        }).Debug("Rolling to next measurement!")
-      }
-    }
-  }(id)
+			time.Sleep(measureInterval * time.Second)
+			select {
+			case <-sessionChannel:
+				log.WithFields(log.Fields{
+					"session_id": id,
+				}).Info("Stopping active session!")
+				return
+			default: // adding default will make it not block
+				log.WithFields(log.Fields{
+					"session_id": id,
+				}).Debug("Rolling to next measurement!")
+			}
+		}
+	}(id)
 }
 
 func insertTemperature(id int) {
-  sqlStatement := `
+	sqlStatement := `
     INSERT INTO measurements (session_id, timestamp, temperature)
     VALUES ($1, $2, $3);`
 
-  _, err := global.BrewmDB.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
-  if err != nil {
-    log.WithFields(log.Fields{
-      "session_id": id,
-    }).Error("Failed to save measurement!")
-  }
+	_, err := global.BrewmDB.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
+	if err != nil {
+		log.WithFields(log.Fields{
+			"session_id": id,
+		}).Error("Failed to save measurement!")
+	}
 }
 
 func StopSession(c *gin.Context) {
-  log.Info(c)
+	log.Info(c)
 
-  id := c.PostForm("id")
+	id := c.PostForm("id")
 
-  if id == "" {
-    c.JSON(http.StatusBadRequest, gin.H{"error": "No id found. Provide session id to stop."})
-    return
-  }
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No id found. Provide session id to stop."})
+		return
+	}
 
-  sqlStatement := `
+	sqlStatement := `
     SELECT (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
     FROM sessions
     WHERE id = $1`
-  row := global.BrewmDB.QueryRow(sqlStatement, id)
+	row := global.BrewmDB.QueryRow(sqlStatement, id)
 
-  var isActive bool
-  err := row.Scan(&isActive)
+	var isActive bool
+	err := row.Scan(&isActive)
 
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{
-      "message": "Checking session with the given id failed!",
-      "id": id,
-      "error": err.Error(),
-    })
-    return
-  }
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Checking session with the given id failed!",
+			"id":      id,
+			"error":   err.Error(),
+		})
+		return
+	}
 
-  if isActive == false {
-    c.JSON(http.StatusBadRequest, gin.H{"error": "Given session is not active. Can't stop."})
-    return
-  }
+	if isActive == false {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Given session is not active. Can't stop."})
+		return
+	}
 
-  sqlStatement = `
+	sqlStatement = `
     UPDATE sessions
     SET stop_time = $1
     WHERE id = $2`
 
-  timestamp := time.Now()
+	timestamp := time.Now()
 
-  _, err = global.BrewmDB.Exec(sqlStatement, timestamp, id)
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-  }
+	_, err = global.BrewmDB.Exec(sqlStatement, timestamp, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 
-  if sessionChannel != nil {
-    log.WithFields(log.Fields{
-      "session_id": id,
-    }).Info("Stopping session background process!")
-    close(sessionChannel)
-    sessionChannel = nil
-  }
+	if sessionChannel != nil {
+		log.WithFields(log.Fields{
+			"session_id": id,
+		}).Info("Stopping session background process!")
+		close(sessionChannel)
+		sessionChannel = nil
+	}
 
-  c.JSON(http.StatusOK, gin.H{
-    "message": "Session stopped.",
-    "stop_time": timestamp,
-    "id": id,
-  })
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "Session stopped.",
+		"stop_time": timestamp,
+		"id":        id,
+	})
 }
 
 func RestartActiveSession() {
-  sqlStatement := `
+	sqlStatement := `
     SELECT MAX(id), (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
     FROM sessions`
-  row := global.BrewmDB.QueryRow(sqlStatement)
+	row := global.BrewmDB.QueryRow(sqlStatement)
 
-  var id int
-  var isActive bool
+	var id int
+	var isActive bool
 
-  err := row.Scan(
-    &id,
-    &isActive,
-  )
+	err := row.Scan(
+		&id,
+		&isActive,
+	)
 
-  if err != nil {
-    log.WithFields(log.Fields{
-      "error": err.Error(),
-    }).Error("Checking active sessions failed!")
-    return
-  }
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("Checking active sessions failed!")
+		return
+	}
 
-  if isActive == true {
-    log.WithFields(log.Fields{
-      "session_id": id,
-    }).Info("Re-starting session process after an apiserver restart!")
-    startSessionProcess(id)
-  }
+	if isActive == true {
+		log.WithFields(log.Fields{
+			"session_id": id,
+		}).Info("Re-starting session process after an apiserver restart!")
+		startSessionProcess(id)
+	}
 }
