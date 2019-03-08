@@ -23,7 +23,6 @@ message GetSessionResponse {
 
 message GetActiveSessionRequest {}
 
-
 message StartSessionRequest {
   string note = 1;
 }
@@ -45,8 +44,6 @@ message ListSessionResponse {
 }
 
 
-
-
 message Session {
   int64 id = 1;
   google.protobuf.Timestamp startTime = 2;
@@ -57,5 +54,5 @@ message Session {
 
 message Measurement {
   google.protobuf.Timestamp timestamp = 1;
-  float Temperature = 2;
+  double Temperature = 2;
 }

@@ -12,7 +12,7 @@ import (
 )
 
 // RunServer runs gRPC service to publish ToDo service
-func RunServer(ctx context.Context, recepieAPI brewmmer.RecepieServiceServer, sessionAPI brewmmer.SessionServiceServer, port string) error {
+func RunServer(ctx context.Context, recepieAPI brewmmer.RecepieServiceServer, sessionAPI brewmmer.SessionServiceServer, temperatureAPI brewmmer.TemperatureServiceServer, port string) error {
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
@@ -22,6 +22,7 @@ func RunServer(ctx context.Context, recepieAPI brewmmer.RecepieServiceServer, se
 	server := grpc.NewServer()
 	brewmmer.RegisterRecepieServiceServer(server, recepieAPI)
 	brewmmer.RegisterSessionServiceServer(server, sessionAPI)
+	brewmmer.RegisterTemperatureServiceServer(server, temperatureAPI)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)

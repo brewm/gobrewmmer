@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package brewmmer;
+
+import "google/protobuf/timestamp.proto";
+
+service TemperatureService {
+  rpc Get (GetTemperatureRequest) returns (GetTemperatureResponse);
+}
+
+message GetTemperatureRequest {}
+message GetTemperatureResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  double Temperature = 2;
+}

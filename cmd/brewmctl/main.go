@@ -1,14 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -28,11 +23,14 @@ var endpoint string
 
 var rClient brewmmer.RecepieServiceClient
 var sClient brewmmer.SessionServiceClient
+var tClient brewmmer.TemperatureServiceClient
 var ctx context.Context
 
 func main() {
 
 	// Set up a connection to the server.
+	endpoint = getEnv("BREWM_ENDPOINT", "localhost:6999")
+
 	conn, err := grpc.Dial("localhost:6999", grpc.WithInsecure())
 	if err != nil {
 		fmt.Printf("did not connect: %v", err)
@@ -41,12 +39,11 @@ func main() {
 
 	rClient = brewmmer.NewRecepieServiceClient(conn)
 	sClient = brewmmer.NewSessionServiceClient(conn)
+	tClient = brewmmer.NewTemperatureServiceClient(conn)
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	endpoint = getEnv("BREWM_ENDPOINT", "http://localhost:8080")
 
 	app := cli.NewApp()
 	app.Name = "brewmctl"
@@ -124,12 +121,14 @@ func main() {
 }
 
 func getTemperature(c *cli.Context) error {
-	data, err := requestWrapper("GET", endpoint+"/v1/sense", nil)
+	req := brewmmer.GetTemperatureRequest{}
+	res, err := tClient.Get(ctx, &req)
 	if err != nil {
+		fmt.Printf("ERROR: Grpc call failed: %v", err)
 		return err
 	}
 
-	prettyJsonPrint(data)
+	fmt.Println("Current temperature: ", res.Temperature)
 
 	return nil
 }
@@ -308,41 +307,9 @@ func getRecepieWithID(id string, raw bool) error {
 	return nil
 }
 
-func requestWrapper(method string, url string, payload *url.Values) ([]byte, error) {
-	var req *http.Request
-	var err error
-
-	if payload != nil {
-		req, err = http.NewRequest(method, url, bytes.NewBufferString(payload.Encode()))
-	} else {
-		req, err = http.NewRequest(method, url, nil)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
-}
-
-func prettyJsonPrint(data []byte) {
-	var out bytes.Buffer
-	json.Indent(&out, data, "", "\t")
-	out.WriteTo(os.Stdout)
-}
+//
+// Helpers
+//
 
 func prettyPrintSessions(ss []*brewmmer.Session) {
 	var maybeTimestamp func(*timestamp.Timestamp) string

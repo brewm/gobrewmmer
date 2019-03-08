@@ -27,9 +27,10 @@ func main() {
 
 	recepieAPI := brewmmer.NewRecepieServiceServer()
 	sessionAPI := brewmmer.NewSessionServiceServer()
+	temperatureAPI := brewmmer.NewTemperatureServiceServer()
 
 	// listen and serve on localhost:6999
-	grpc.RunServer(ctx, recepieAPI, sessionAPI, "6999")
+	grpc.RunServer(ctx, recepieAPI, sessionAPI, temperatureAPI, "6999")
 }
 
 func initLogger() {

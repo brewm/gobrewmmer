@@ -21,14 +21,6 @@ func NewSessionServiceServer() brewmmer.SessionServiceServer {
 }
 
 //
-//
-//
-// func Sense(c *gin.Context) {
-// 	m := Measurement{Timestamp: time.Now(), Temperature: ds18b20.ReadTemperature()}
-// 	c.JSON(200, m)
-// }
-
-//
 // CRUD part (Reads)
 //
 
