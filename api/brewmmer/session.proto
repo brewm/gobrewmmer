@@ -25,7 +25,7 @@ message GetActiveSessionRequest {}
 
 
 message StartSessionRequest {
-  Session session = 1;
+  string note = 1;
 }
 
 message StartSessionResponse {
@@ -33,7 +33,7 @@ message StartSessionResponse {
 }
 
 message StopSessionRequest {
-  Session session = 1;
+  int64 id = 1;
 }
 
 message StopSessionResponse {}

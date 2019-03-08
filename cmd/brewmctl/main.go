@@ -185,15 +185,14 @@ func getSessions(c *cli.Context) error {
 }
 
 func startSession(c *cli.Context) error {
-	payload := url.Values{}
-	payload.Set("note", c.String("note"))
-
-	data, err := requestWrapper("POST", endpoint+"/v1/sessions/", &payload)
+	req := brewmmer.StartSessionRequest{}
+	res, err := sClient.Start(ctx, &req)
 	if err != nil {
+		fmt.Printf("ERROR: Grpc call failed: %v", err)
 		return err
 	}
 
-	fmt.Println(string(data))
+	fmt.Println("Session created with id: ", res.Id)
 
 	return nil
 }
@@ -205,17 +204,22 @@ func stopSession(c *cli.Context) error {
 		return nil
 	}
 
-	id := c.Args().Get(0)
-
-	payload := url.Values{}
-	payload.Set("id", id)
-
-	data, err := requestWrapper("PUT", endpoint+"/v1/sessions/", &payload)
+	id, err := strconv.ParseInt(c.Args().Get(0), 10, 64)
 	if err != nil {
+		fmt.Printf("Failed to parese id as integer!")
 		return err
 	}
 
-	fmt.Println(string(data))
+	req := brewmmer.StopSessionRequest{
+		Id: id,
+	}
+	_, err = sClient.Stop(ctx, &req)
+	if err != nil {
+		fmt.Printf("ERROR: Grpc call failed: %v", err)
+		return err
+	}
+
+	fmt.Println("Session stopped")
 
 	return nil
 }
