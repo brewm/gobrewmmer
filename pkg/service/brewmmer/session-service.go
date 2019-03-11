@@ -14,7 +14,9 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
-type sessionServiceServer struct{}
+type sessionServiceServer struct {
+	sessionChannel chan struct{}
+}
 
 func NewSessionServiceServer() brewmmer.SessionServiceServer {
 	return &sessionServiceServer{}
@@ -24,7 +26,7 @@ func NewSessionServiceServer() brewmmer.SessionServiceServer {
 // CRUD part (Reads)
 //
 
-func (s *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSessionRequest) (*brewmmer.GetSessionResponse, error) {
+func (sss *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSessionRequest) (*brewmmer.GetSessionResponse, error) {
 	log.WithFields(log.Fields{"id": req.Id}).Info("Getting session!")
 
 	sqlStatement := `
@@ -72,7 +74,7 @@ func (s *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSession
 	}, nil
 }
 
-func (s *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.GetActiveSessionRequest) (*brewmmer.GetSessionResponse, error) {
+func (sss *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.GetActiveSessionRequest) (*brewmmer.GetSessionResponse, error) {
 	log.Info("Getting active session!")
 
 	// Making sure to return only one session
@@ -121,7 +123,7 @@ func (s *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.GetA
 	}, nil
 }
 
-func (s *sessionServiceServer) List(ctx context.Context, req *brewmmer.ListSessionRequest) (*brewmmer.ListSessionResponse, error) {
+func (sss *sessionServiceServer) List(ctx context.Context, req *brewmmer.ListSessionRequest) (*brewmmer.ListSessionResponse, error) {
 	log.Info("Getting all sessions!")
 	sessions := []*brewmmer.Session{}
 
@@ -237,13 +239,11 @@ func fetchMeasurements(session *brewmmer.Session) error {
 // NOT CRUD PART
 //
 
-var sessionChannel chan struct{}
-
 // in seconds
-const measureInterval = 600
+const measureInterval = 10
 
-func (s *sessionServiceServer) Start(ctx context.Context, req *brewmmer.StartSessionRequest) (*brewmmer.StartSessionResponse, error) {
-	if sessionChannel != nil {
+func (sss *sessionServiceServer) Start(ctx context.Context, req *brewmmer.StartSessionRequest) (*brewmmer.StartSessionResponse, error) {
+	if sss.sessionChannel != nil {
 		return nil, errors.New("session is already in progress, one session can be active at a time")
 	}
 
@@ -266,15 +266,15 @@ func (s *sessionServiceServer) Start(ctx context.Context, req *brewmmer.StartSes
 	log.WithFields(log.Fields{
 		"session_id": int(sessionID),
 	}).Info("Starting new session process!")
-	startSessionProcess(int(sessionID))
+	startSessionProcess(&sss.sessionChannel, int(sessionID))
 
 	return &brewmmer.StartSessionResponse{
 		Id: sessionID,
 	}, nil
 }
 
-func startSessionProcess(id int) {
-	sessionChannel = make(chan struct{})
+func startSessionProcess(sc *chan struct{}, id int) {
+	*sc = make(chan struct{})
 
 	// Start goroutine to periodically run the insert
 	go func(id int) {
@@ -284,7 +284,7 @@ func startSessionProcess(id int) {
 
 			time.Sleep(measureInterval * time.Second)
 			select {
-			case <-sessionChannel:
+			case <-*sc:
 				log.WithFields(log.Fields{
 					"session_id": id,
 				}).Info("Stopping active session!")
@@ -311,7 +311,7 @@ func insertTemperature(id int) {
 	}
 }
 
-func (s *sessionServiceServer) Stop(ctx context.Context, req *brewmmer.StopSessionRequest) (*brewmmer.StopSessionResponse, error) {
+func (sss *sessionServiceServer) Stop(ctx context.Context, req *brewmmer.StopSessionRequest) (*brewmmer.StopSessionResponse, error) {
 	sqlStatement := `
     SELECT (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
     FROM sessions
@@ -344,12 +344,12 @@ func (s *sessionServiceServer) Stop(ctx context.Context, req *brewmmer.StopSessi
 		return nil, err
 	}
 
-	if sessionChannel != nil {
+	if sss.sessionChannel != nil {
 		log.WithFields(log.Fields{
 			"session_id": req.Id,
 		}).Info("Stopping session background process!")
-		close(sessionChannel)
-		sessionChannel = nil
+		close(sss.sessionChannel)
+		sss.sessionChannel = nil
 	}
 
 	return &brewmmer.StopSessionResponse{}, nil
