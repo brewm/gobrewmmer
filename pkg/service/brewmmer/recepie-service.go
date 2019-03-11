@@ -2,22 +2,24 @@ package brewmmer
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 
-	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type recipeServiceServer struct{}
-
-func NewRecipeServiceServer() brewmmer.RecipeServiceServer {
-	return &recipeServiceServer{}
+type recipeServiceServer struct {
+	db *sql.DB
 }
 
-func (s *recipeServiceServer) Create(ctx context.Context, req *brewmmer.CreateRecipeRequest) (*brewmmer.CreateRecipeResponse, error) {
+func NewRecipeServiceServer(db *sql.DB) brewmmer.RecipeServiceServer {
+	return &recipeServiceServer{db: db}
+}
+
+func (rss *recipeServiceServer) Create(ctx context.Context, req *brewmmer.CreateRecipeRequest) (*brewmmer.CreateRecipeResponse, error) {
 	m := jsonpb.Marshaler{}
 
 	// reset id
@@ -28,7 +30,7 @@ func (s *recipeServiceServer) Create(ctx context.Context, req *brewmmer.CreateRe
 	}
 
 	sqlStatement := `INSERT INTO recipes (recipe) VALUES ($1)`
-	res, err := global.BrewmDB.Exec(sqlStatement, recipeJson)
+	res, err := rss.db.Exec(sqlStatement, recipeJson)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to insert into Recipe-> "+err.Error())
 	}
@@ -43,13 +45,13 @@ func (s *recipeServiceServer) Create(ctx context.Context, req *brewmmer.CreateRe
 	}, nil
 }
 
-func (s *recipeServiceServer) Get(ctx context.Context, req *brewmmer.GetRecipeRequest) (*brewmmer.GetRecipeResponse, error) {
+func (rss *recipeServiceServer) Get(ctx context.Context, req *brewmmer.GetRecipeRequest) (*brewmmer.GetRecipeResponse, error) {
 	sqlStatement := `
     SELECT
       recipe
     FROM recipes
     WHERE id=$1`
-	row := global.BrewmDB.QueryRow(sqlStatement, req.Id)
+	row := rss.db.QueryRow(sqlStatement, req.Id)
 
 	var recipeJson string
 	row.Scan(&recipeJson)
@@ -68,19 +70,19 @@ func (s *recipeServiceServer) Get(ctx context.Context, req *brewmmer.GetRecipeRe
 	}, nil
 }
 
-func (s *recipeServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecipeRequest) (*brewmmer.DeleteRecipeResponse, error) {
+func (rss *recipeServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecipeRequest) (*brewmmer.DeleteRecipeResponse, error) {
 	return nil, nil
 }
 
-func (s *recipeServiceServer) Update(ctx context.Context, req *brewmmer.UpdateRecipeRequest) (*brewmmer.UpdateRecipeResponse, error) {
+func (rss *recipeServiceServer) Update(ctx context.Context, req *brewmmer.UpdateRecipeRequest) (*brewmmer.UpdateRecipeResponse, error) {
 	return nil, nil
 }
 
-func (s *recipeServiceServer) List(ctx context.Context, req *brewmmer.ListRecipeRequest) (*brewmmer.ListRecipeResponse, error) {
+func (rss *recipeServiceServer) List(ctx context.Context, req *brewmmer.ListRecipeRequest) (*brewmmer.ListRecipeResponse, error) {
 	recipes := []*brewmmer.Recipe{}
 	um := jsonpb.Unmarshaler{}
 
-	rows, err := global.BrewmDB.Query(`
+	rows, err := rss.db.Query(`
 		SELECT
 		  id,
       recipe

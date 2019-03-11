@@ -2,12 +2,12 @@ package brewmmer
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/brewm/gobrewmmer/pkg/service/ds18b20"
 	"github.com/golang/protobuf/ptypes"
@@ -15,17 +15,18 @@ import (
 )
 
 type sessionServiceServer struct {
+	db             *sql.DB
 	sessionChannel chan struct{}
 }
 
-func NewSessionServiceServer() brewmmer.SessionServiceServer {
-	server := &sessionServiceServer{}
+func NewSessionServiceServer(db *sql.DB) brewmmer.SessionServiceServer {
+	server := &sessionServiceServer{db: db}
 
 	// Restart the session process if there is an acive
 	sqlStatement := `
     SELECT MAX(id), (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
     FROM sessions`
-	row := global.BrewmDB.QueryRow(sqlStatement)
+	row := db.QueryRow(sqlStatement)
 
 	var id int
 	var isActive bool
@@ -45,7 +46,7 @@ func NewSessionServiceServer() brewmmer.SessionServiceServer {
 		log.WithFields(log.Fields{
 			"session_id": id,
 		}).Info("Re-starting session process after an apiserver restart!")
-		startSessionProcess(&server.sessionChannel, id)
+		startSessionProcess(db, &server.sessionChannel, id)
 	}
 
 	return server
@@ -66,7 +67,7 @@ func (sss *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSessi
 	note
 	FROM sessions
 	WHERE id=$1`
-	row := global.BrewmDB.QueryRow(sqlStatement, req.Id)
+	row := sss.db.QueryRow(sqlStatement, req.Id)
 
 	var nullableStopTime *time.Time
 	var startTime *time.Time
@@ -93,7 +94,7 @@ func (sss *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSessi
 		"stop_time":  session.StopTime,
 	}).Debug("Found session!")
 
-	err = fetchMeasurements(session)
+	err = fetchMeasurements(sss.db, session)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func (sss *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.Ge
 	note
 	FROM sessions
 	WHERE stop_time IS NULL`
-	row := global.BrewmDB.QueryRow(sqlStatement)
+	row := sss.db.QueryRow(sqlStatement)
 
 	var nullableStopTime *time.Time
 	var startTime *time.Time
@@ -142,7 +143,7 @@ func (sss *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.Ge
 		"stop_time":  session.StopTime,
 	}).Debug("Found session!")
 
-	err = fetchMeasurements(session)
+	err = fetchMeasurements(sss.db, session)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +157,7 @@ func (sss *sessionServiceServer) List(ctx context.Context, req *brewmmer.ListSes
 	log.Info("Getting all sessions!")
 	sessions := []*brewmmer.Session{}
 
-	rows, err := global.BrewmDB.Query(`
+	rows, err := sss.db.Query(`
     SELECT
       id,
       start_time,
@@ -223,7 +224,7 @@ func fillTime(session *brewmmer.Session, startTime *time.Time, nullableStopTime 
 	return nil
 }
 
-func fetchMeasurements(session *brewmmer.Session) error {
+func fetchMeasurements(db *sql.DB, session *brewmmer.Session) error {
 	log.WithFields(log.Fields{"session_id": session.Id}).Debug("Getting measurements!")
 
 	sqlStatement := `
@@ -233,7 +234,7 @@ func fetchMeasurements(session *brewmmer.Session) error {
     FROM measurements
     WHERE session_id=$1`
 
-	rows, err := global.BrewmDB.Query(sqlStatement, session.Id)
+	rows, err := db.Query(sqlStatement, session.Id)
 
 	if err != nil {
 		return err
@@ -282,7 +283,7 @@ func (sss *sessionServiceServer) Start(ctx context.Context, req *brewmmer.StartS
     INSERT INTO sessions (start_time, note)
     VALUES ($1, $2)`
 
-	result, err := global.BrewmDB.Exec(sqlStatement, timestamp, req.Note)
+	result, err := sss.db.Exec(sqlStatement, timestamp, req.Note)
 	if err != nil {
 		return nil, err
 	}
@@ -295,21 +296,21 @@ func (sss *sessionServiceServer) Start(ctx context.Context, req *brewmmer.StartS
 	log.WithFields(log.Fields{
 		"session_id": int(sessionID),
 	}).Info("Starting new session process!")
-	startSessionProcess(&sss.sessionChannel, int(sessionID))
+	startSessionProcess(sss.db, &sss.sessionChannel, int(sessionID))
 
 	return &brewmmer.StartSessionResponse{
 		Id: sessionID,
 	}, nil
 }
 
-func startSessionProcess(sc *chan struct{}, id int) {
+func startSessionProcess(db *sql.DB, sc *chan struct{}, id int) {
 	*sc = make(chan struct{})
 
 	// Start goroutine to periodically run the insert
 	go func(id int) {
 		for {
 			// Start goroutine to do an async insert
-			go insertTemperature(id)
+			go insertTemperature(db, id)
 
 			time.Sleep(measureInterval * time.Second)
 			select {
@@ -327,12 +328,12 @@ func startSessionProcess(sc *chan struct{}, id int) {
 	}(id)
 }
 
-func insertTemperature(id int) {
+func insertTemperature(db *sql.DB, id int) {
 	sqlStatement := `
     INSERT INTO measurements (session_id, timestamp, temperature)
     VALUES ($1, $2, $3);`
 
-	_, err := global.BrewmDB.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
+	_, err := db.Exec(sqlStatement, id, time.Now(), ds18b20.ReadTemperature())
 	if err != nil {
 		log.WithFields(log.Fields{
 			"session_id": id,
@@ -345,7 +346,7 @@ func (sss *sessionServiceServer) Stop(ctx context.Context, req *brewmmer.StopSes
     SELECT (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
     FROM sessions
     WHERE id = $1`
-	row := global.BrewmDB.QueryRow(sqlStatement, req.Id)
+	row := sss.db.QueryRow(sqlStatement, req.Id)
 
 	var isActive bool
 	err := row.Scan(&isActive)
@@ -368,7 +369,7 @@ func (sss *sessionServiceServer) Stop(ctx context.Context, req *brewmmer.StopSes
 
 	timestamp := time.Now()
 
-	_, err = global.BrewmDB.Exec(sqlStatement, timestamp, req.Id)
+	_, err = sss.db.Exec(sqlStatement, timestamp, req.Id)
 	if err != nil {
 		return nil, err
 	}

@@ -9,38 +9,21 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/brewm/gobrewmmer/cmd/brewmserver/global"
 	"github.com/brewm/gobrewmmer/pkg/protocol/grpc"
 	"github.com/brewm/gobrewmmer/pkg/service/brewmmer"
 )
 
-func init() {
-	initLogger()
-	initDB()
-}
-
 // RunServer runs gRPC server and HTTP gateway
 func main() {
-	defer global.BrewmDB.Close()
-
-	ctx := context.Background()
-
-	recipeAPI := brewmmer.NewRecipeServiceServer()
-	sessionAPI := brewmmer.NewSessionServiceServer()
-	temperatureAPI := brewmmer.NewTemperatureServiceServer()
-
-	// listen and serve on localhost:6999
-	grpc.RunServer(ctx, recipeAPI, sessionAPI, temperatureAPI, "6999")
-}
-
-func initLogger() {
+	// Configure logging
 	log.SetLevel(log.InfoLevel)
 	log.SetOutput(os.Stderr)
-}
 
-func initDB() {
+	// Get config
 	dbPath := getEnv("BREWM_DB_PATH", "./brewmmer.db")
+	grpcPort := getEnv("BREWM_GRPC_PORT", "6999")
 
+	// Set up db
 	_, fileErr := os.Stat(dbPath)
 	if os.IsNotExist(fileErr) {
 		log.WithFields(log.Fields{
@@ -48,17 +31,26 @@ func initDB() {
 		}).Fatal("Database file doesn't exist!")
 	}
 
-	var dbErr error
-	global.BrewmDB, dbErr = sql.Open("sqlite3", dbPath)
-	if dbErr != nil {
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
 		log.WithFields(log.Fields{
-			"err": dbErr,
+			"err": err,
 		}).Fatal("Database connection failed!")
 	}
+	defer db.Close()
 
 	log.WithFields(log.Fields{
 		"dbPath": dbPath,
 	}).Info("Database connection was successfull!")
+
+	// Start GRPC server
+	ctx := context.Background()
+
+	recipeAPI := brewmmer.NewRecipeServiceServer(db)
+	sessionAPI := brewmmer.NewSessionServiceServer(db)
+	temperatureAPI := brewmmer.NewTemperatureServiceServer()
+
+	grpc.RunServer(ctx, recipeAPI, sessionAPI, temperatureAPI, grpcPort)
 }
 
 func getEnv(key, fallback string) string {
