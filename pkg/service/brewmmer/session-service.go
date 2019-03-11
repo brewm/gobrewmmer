@@ -19,7 +19,36 @@ type sessionServiceServer struct {
 }
 
 func NewSessionServiceServer() brewmmer.SessionServiceServer {
-	return &sessionServiceServer{}
+	server := &sessionServiceServer{}
+
+	// Restart the session process if there is an acive
+	sqlStatement := `
+    SELECT MAX(id), (CASE WHEN stop_time IS NULL THEN 1 ELSE 0 END) as is_active
+    FROM sessions`
+	row := global.BrewmDB.QueryRow(sqlStatement)
+
+	var id int
+	var isActive bool
+
+	err := row.Scan(
+		&id,
+		&isActive,
+	)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("Checking active sessions failed!")
+	}
+
+	if isActive == true {
+		log.WithFields(log.Fields{
+			"session_id": id,
+		}).Info("Re-starting session process after an apiserver restart!")
+		startSessionProcess(&server.sessionChannel, id)
+	}
+
+	return server
 }
 
 //
