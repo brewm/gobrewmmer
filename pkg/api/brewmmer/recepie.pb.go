@@ -23,6 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+// *
+// Represents the type of the ingredient.
 type IngredientType int32
 
 const (
@@ -52,9 +54,11 @@ func (x IngredientType) String() string {
 	return proto.EnumName(IngredientType_name, int32(x))
 }
 func (IngredientType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{0}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{0}
 }
 
+// *
+// Represents the quantity unit.
 type Unit int32
 
 const (
@@ -87,16 +91,18 @@ func (x Unit) String() string {
 	return proto.EnumName(Unit_name, int32(x))
 }
 func (Unit) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{1}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{1}
 }
 
+// *
+// Represents the different phases of the brewing process.
 type Phase int32
 
 const (
 	Phase_INIT         Phase = 0
 	Phase_MASHING      Phase = 1
-	Phase_BOILING      Phase = 2
-	Phase_SPARGING     Phase = 3
+	Phase_SPARGING     Phase = 2
+	Phase_BOILING      Phase = 3
 	Phase_CHILLING     Phase = 4
 	Phase_FERMENTATION Phase = 5
 	Phase_BOTTLING     Phase = 6
@@ -105,8 +111,8 @@ const (
 var Phase_name = map[int32]string{
 	0: "INIT",
 	1: "MASHING",
-	2: "BOILING",
-	3: "SPARGING",
+	2: "SPARGING",
+	3: "BOILING",
 	4: "CHILLING",
 	5: "FERMENTATION",
 	6: "BOTTLING",
@@ -114,8 +120,8 @@ var Phase_name = map[int32]string{
 var Phase_value = map[string]int32{
 	"INIT":         0,
 	"MASHING":      1,
-	"BOILING":      2,
-	"SPARGING":     3,
+	"SPARGING":     2,
+	"BOILING":      3,
 	"CHILLING":     4,
 	"FERMENTATION": 5,
 	"BOTTLING":     6,
@@ -125,7 +131,7 @@ func (x Phase) String() string {
 	return proto.EnumName(Phase_name, int32(x))
 }
 func (Phase) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{2}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{2}
 }
 
 type GetRecipeRequest struct {
@@ -139,7 +145,7 @@ func (m *GetRecipeRequest) Reset()         { *m = GetRecipeRequest{} }
 func (m *GetRecipeRequest) String() string { return proto.CompactTextString(m) }
 func (*GetRecipeRequest) ProtoMessage()    {}
 func (*GetRecipeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{0}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{0}
 }
 func (m *GetRecipeRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetRecipeRequest.Unmarshal(m, b)
@@ -177,7 +183,7 @@ func (m *GetRecipeResponse) Reset()         { *m = GetRecipeResponse{} }
 func (m *GetRecipeResponse) String() string { return proto.CompactTextString(m) }
 func (*GetRecipeResponse) ProtoMessage()    {}
 func (*GetRecipeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{1}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{1}
 }
 func (m *GetRecipeResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetRecipeResponse.Unmarshal(m, b)
@@ -215,7 +221,7 @@ func (m *CreateRecipeRequest) Reset()         { *m = CreateRecipeRequest{} }
 func (m *CreateRecipeRequest) String() string { return proto.CompactTextString(m) }
 func (*CreateRecipeRequest) ProtoMessage()    {}
 func (*CreateRecipeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{2}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{2}
 }
 func (m *CreateRecipeRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateRecipeRequest.Unmarshal(m, b)
@@ -253,7 +259,7 @@ func (m *CreateRecipeResponse) Reset()         { *m = CreateRecipeResponse{} }
 func (m *CreateRecipeResponse) String() string { return proto.CompactTextString(m) }
 func (*CreateRecipeResponse) ProtoMessage()    {}
 func (*CreateRecipeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{3}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{3}
 }
 func (m *CreateRecipeResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateRecipeResponse.Unmarshal(m, b)
@@ -291,7 +297,7 @@ func (m *UpdateRecipeRequest) Reset()         { *m = UpdateRecipeRequest{} }
 func (m *UpdateRecipeRequest) String() string { return proto.CompactTextString(m) }
 func (*UpdateRecipeRequest) ProtoMessage()    {}
 func (*UpdateRecipeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{4}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{4}
 }
 func (m *UpdateRecipeRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UpdateRecipeRequest.Unmarshal(m, b)
@@ -328,7 +334,7 @@ func (m *UpdateRecipeResponse) Reset()         { *m = UpdateRecipeResponse{} }
 func (m *UpdateRecipeResponse) String() string { return proto.CompactTextString(m) }
 func (*UpdateRecipeResponse) ProtoMessage()    {}
 func (*UpdateRecipeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{5}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{5}
 }
 func (m *UpdateRecipeResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UpdateRecipeResponse.Unmarshal(m, b)
@@ -359,7 +365,7 @@ func (m *DeleteRecipeRequest) Reset()         { *m = DeleteRecipeRequest{} }
 func (m *DeleteRecipeRequest) String() string { return proto.CompactTextString(m) }
 func (*DeleteRecipeRequest) ProtoMessage()    {}
 func (*DeleteRecipeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{6}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{6}
 }
 func (m *DeleteRecipeRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DeleteRecipeRequest.Unmarshal(m, b)
@@ -396,7 +402,7 @@ func (m *DeleteRecipeResponse) Reset()         { *m = DeleteRecipeResponse{} }
 func (m *DeleteRecipeResponse) String() string { return proto.CompactTextString(m) }
 func (*DeleteRecipeResponse) ProtoMessage()    {}
 func (*DeleteRecipeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{7}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{7}
 }
 func (m *DeleteRecipeResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DeleteRecipeResponse.Unmarshal(m, b)
@@ -426,7 +432,7 @@ func (m *ListRecipeRequest) Reset()         { *m = ListRecipeRequest{} }
 func (m *ListRecipeRequest) String() string { return proto.CompactTextString(m) }
 func (*ListRecipeRequest) ProtoMessage()    {}
 func (*ListRecipeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{8}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{8}
 }
 func (m *ListRecipeRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListRecipeRequest.Unmarshal(m, b)
@@ -457,7 +463,7 @@ func (m *ListRecipeResponse) Reset()         { *m = ListRecipeResponse{} }
 func (m *ListRecipeResponse) String() string { return proto.CompactTextString(m) }
 func (*ListRecipeResponse) ProtoMessage()    {}
 func (*ListRecipeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{9}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{9}
 }
 func (m *ListRecipeResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListRecipeResponse.Unmarshal(m, b)
@@ -484,6 +490,8 @@ func (m *ListRecipeResponse) GetRecipes() []*Recipe {
 	return nil
 }
 
+// *
+// Represents the quantity.
 type Quantity struct {
 	Volume               float32  `protobuf:"fixed32,1,opt,name=volume,proto3" json:"volume,omitempty"`
 	Unit                 Unit     `protobuf:"varint,2,opt,name=unit,proto3,enum=brewmmer.Unit" json:"unit,omitempty"`
@@ -496,7 +504,7 @@ func (m *Quantity) Reset()         { *m = Quantity{} }
 func (m *Quantity) String() string { return proto.CompactTextString(m) }
 func (*Quantity) ProtoMessage()    {}
 func (*Quantity) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{10}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{10}
 }
 func (m *Quantity) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Quantity.Unmarshal(m, b)
@@ -530,6 +538,8 @@ func (m *Quantity) GetUnit() Unit {
 	return Unit_NULL_UNIT
 }
 
+// *
+// Represents the ingredient.
 type Ingredient struct {
 	Type                 IngredientType `protobuf:"varint,1,opt,name=type,proto3,enum=brewmmer.IngredientType" json:"type,omitempty"`
 	Name                 string         `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -543,7 +553,7 @@ func (m *Ingredient) Reset()         { *m = Ingredient{} }
 func (m *Ingredient) String() string { return proto.CompactTextString(m) }
 func (*Ingredient) ProtoMessage()    {}
 func (*Ingredient) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{11}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{11}
 }
 func (m *Ingredient) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Ingredient.Unmarshal(m, b)
@@ -584,6 +594,8 @@ func (m *Ingredient) GetQuantity() *Quantity {
 	return nil
 }
 
+// *
+// Represents a Step of the brewing process.
 type Step struct {
 	Phase                Phase         `protobuf:"varint,1,opt,name=phase,proto3,enum=brewmmer.Phase" json:"phase,omitempty"`
 	Temperature          int64         `protobuf:"varint,2,opt,name=temperature,proto3" json:"temperature,omitempty"`
@@ -598,7 +610,7 @@ func (m *Step) Reset()         { *m = Step{} }
 func (m *Step) String() string { return proto.CompactTextString(m) }
 func (*Step) ProtoMessage()    {}
 func (*Step) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{12}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{12}
 }
 func (m *Step) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Step.Unmarshal(m, b)
@@ -646,6 +658,8 @@ func (m *Step) GetIngredients() []*Ingredient {
 	return nil
 }
 
+// *
+// Represents the whole recipe for a beer with ingredients and steps.
 type Recipe struct {
 	Id                   int64         `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name                 string        `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -661,7 +675,7 @@ func (m *Recipe) Reset()         { *m = Recipe{} }
 func (m *Recipe) String() string { return proto.CompactTextString(m) }
 func (*Recipe) ProtoMessage()    {}
 func (*Recipe) Descriptor() ([]byte, []int) {
-	return fileDescriptor_recepie_9f8396097ebdbbcc, []int{13}
+	return fileDescriptor_recepie_eed0ff0aeadb9375, []int{13}
 }
 func (m *Recipe) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Recipe.Unmarshal(m, b)
@@ -940,9 +954,9 @@ var _RecipeService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/brewmmer/recepie.proto",
 }
 
-func init() { proto.RegisterFile("api/brewmmer/recepie.proto", fileDescriptor_recepie_9f8396097ebdbbcc) }
+func init() { proto.RegisterFile("api/brewmmer/recepie.proto", fileDescriptor_recepie_eed0ff0aeadb9375) }
 
-var fileDescriptor_recepie_9f8396097ebdbbcc = []byte{
+var fileDescriptor_recepie_eed0ff0aeadb9375 = []byte{
 	// 710 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x4d, 0x6f, 0xda, 0x4a,
 	0x14, 0x8d, 0xbf, 0x08, 0x5c, 0x12, 0xde, 0xe4, 0x82, 0x22, 0x8b, 0xf7, 0x5e, 0x85, 0xac, 0xa6,
@@ -979,14 +993,14 @@ var fileDescriptor_recepie_9f8396097ebdbbcc = []byte{
 	0x1c, 0xb2, 0x85, 0x1a, 0x48, 0x3d, 0x22, 0x89, 0x3f, 0x26, 0x91, 0xb1, 0x00, 0xf2, 0x3b, 0x93,
 	0x28, 0xb8, 0x0d, 0x4a, 0xdf, 0xb2, 0x89, 0x2a, 0x16, 0xe7, 0x9d, 0x2b, 0xa2, 0x35, 0x6f, 0x41,
 	0x8b, 0x5e, 0x57, 0x88, 0x5b, 0xf1, 0xd1, 0x32, 0x6c, 0xf7, 0x3b, 0xa3, 0x4b, 0xcb, 0x36, 0x89,
-	0x24, 0x36, 0xa7, 0x03, 0xab, 0x27, 0x36, 0x32, 0xee, 0x40, 0x71, 0x34, 0xec, 0x50, 0x53, 0xec,
-	0x14, 0xb1, 0x3b, 0xbb, 0xb4, 0x7a, 0x11, 0xa6, 0x22, 0x81, 0x9d, 0x8b, 0x2e, 0xed, 0x77, 0x6d,
-	0xa7, 0xe3, 0x58, 0x03, 0x9b, 0x68, 0x02, 0x3f, 0x1d, 0x38, 0x4e, 0x84, 0x17, 0xda, 0xdf, 0x64,
-	0xd8, 0x8d, 0x1f, 0x6b, 0xc4, 0x82, 0x07, 0x77, 0xca, 0xf0, 0x0d, 0x28, 0x26, 0xe3, 0x58, 0x4f,
-	0xa7, 0xb5, 0x19, 0x85, 0xf5, 0x7f, 0x73, 0xb1, 0xe4, 0x9f, 0xd5, 0x84, 0x42, 0x9c, 0x4b, 0xf8,
-	0x7f, 0x4a, 0xcb, 0x89, 0xba, 0xfa, 0xb3, 0x9f, 0xc1, 0xa9, 0x50, 0x9c, 0x3b, 0x59, 0xa1, 0x9c,
-	0x28, 0xcb, 0x0a, 0xe5, 0x05, 0x95, 0x10, 0x8a, 0x13, 0x28, 0x2b, 0x94, 0x13, 0x5d, 0x59, 0xa1,
-	0xbc, 0xc8, 0xc2, 0x0e, 0xa8, 0x22, 0x9d, 0x30, 0x73, 0xff, 0x1f, 0x22, 0xac, 0xfe, 0x5f, 0x3e,
-	0x18, 0x4b, 0xdc, 0x14, 0xa2, 0x9f, 0x9a, 0x57, 0xdf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x93, 0xcc,
-	0xf6, 0x58, 0x88, 0x06, 0x00, 0x00,
+	0x84, 0x3b, 0x50, 0x1c, 0x0d, 0x3b, 0xd4, 0x14, 0x3b, 0x59, 0x40, 0xa7, 0x03, 0xab, 0x27, 0x36,
+	0x8a, 0x80, 0xce, 0x2e, 0xad, 0x5e, 0xb4, 0x53, 0x91, 0xc0, 0xce, 0x45, 0x97, 0xf6, 0xbb, 0xb6,
+	0xd3, 0x71, 0xac, 0x81, 0x4d, 0x34, 0x81, 0x9f, 0x0e, 0x1c, 0x27, 0xc2, 0x0b, 0xed, 0x6f, 0x32,
+	0xec, 0xc6, 0x8f, 0x35, 0x62, 0xc1, 0x83, 0x3b, 0x65, 0xf8, 0x06, 0x14, 0x93, 0x71, 0xac, 0xa7,
+	0xd3, 0xda, 0x8c, 0xc2, 0xfa, 0xbf, 0xb9, 0x58, 0xf2, 0xcf, 0x6a, 0x42, 0x21, 0xce, 0x25, 0xfc,
+	0x3f, 0xa5, 0xe5, 0x44, 0x5d, 0xfd, 0xd9, 0xcf, 0xe0, 0x54, 0x28, 0xce, 0x9d, 0xac, 0x50, 0x4e,
+	0x94, 0x65, 0x85, 0xf2, 0x82, 0x4a, 0x08, 0xc5, 0x09, 0x94, 0x15, 0xca, 0x89, 0xae, 0xac, 0x50,
+	0x5e, 0x64, 0x61, 0x07, 0x54, 0x91, 0x4e, 0x98, 0xb9, 0xff, 0x0f, 0x11, 0x56, 0xff, 0x2f, 0x1f,
+	0x8c, 0x25, 0x6e, 0x0a, 0xd1, 0x4f, 0xcd, 0xab, 0xef, 0x01, 0x00, 0x00, 0xff, 0xff, 0x35, 0x71,
+	0xea, 0x2f, 0x88, 0x06, 0x00, 0x00,
 }

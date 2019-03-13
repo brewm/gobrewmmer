@@ -37,7 +37,8 @@ https://github.com/golang-standards/project-layout
 Trying to use a minimal amount of external packages to control complexity. E.g. use the plain 'database/sql' instead of ORM.
 
 ### API
-https://github.com/gin-gonic/gin
+Protobuf + GRPC
+https://developers.google.com/protocol-buffers/docs/proto
 
 ### Loging library
 https://github.com/sirupsen/logrus

@@ -2,6 +2,9 @@ syntax = "proto3";
 
 package brewmmer;
 
+/**
+ * Service for managing recipes.
+ */
 service RecipeService {
   rpc Get    (GetRecipeRequest)    returns (GetRecipeResponse);
   rpc Create (CreateRecipeRequest) returns (CreateRecipeResponse);
@@ -46,45 +49,62 @@ message ListRecipeResponse {
 
 
 
-
+/**
+ * Represents the type of the ingredient.
+ */
 enum IngredientType {
-  NULL_INGREDIENT_TYPE = 0;
+  NULL_INGREDIENT_TYPE = 0; // No type ingredient
   WATER = 1;
   MALT = 2;
   HOPS = 3;
   YIEST = 4;
 }
 
+/**
+ * Represents the quantity unit.
+ */
 enum Unit {
-  NULL_UNIT = 0;
-  L = 1;
-  G = 2;
-  KG = 3;
-  MIN = 4;
-  DAY = 5;
+  NULL_UNIT = 0;  // No unit
+  L = 1; // Liter
+  G = 2; // Gram
+  KG = 3; // Kilogram
+  MIN = 4; // Minute
+  DAY = 5; // Day
 }
 
+/**
+ * Represents the quantity.
+ */
 message Quantity {
-  float volume = 1;
-  Unit unit = 2;
+  float volume = 1; // Amount of
+  Unit unit = 2;  // Unit
 }
 
+/**
+ * Represents the ingredient.
+ */
 message Ingredient {
   IngredientType type = 1;
   string name = 2;
   Quantity quantity = 3;
 }
 
+/**
+ * Represents the different phases of the brewing process.
+ */
 enum Phase {
-  INIT = 0;
-  MASHING = 1;
-  BOILING = 2;
-  SPARGING = 3;
-  CHILLING = 4;
-  FERMENTATION = 5;
-  BOTTLING = 6;
+  INIT = 0;  // Combining the mix of grains with heated water
+  MASHING = 1; // Process of holding/raising the mash temperature in steps
+  SPARGING = 2; // Trickling water through the grain to extract remaining sugars
+  BOILING = 3; // Boiling the sweet wort while adding hops
+  CHILLING = 4; // Cool down the wort
+  FERMENTATION = 5; // Process of fermentation
+  BOTTLING = 6; // Bottling the beer
 }
 
+/**
+ * Represents a Step of the brewing process.
+ */
 message Step {
   Phase phase = 1;
   int64 temperature = 2;
@@ -92,8 +112,11 @@ message Step {
   repeated Ingredient ingredients = 4;
 }
 
+/**
+ * Represents the whole recipe for a beer with ingredients and steps.
+ */
 message Recipe {
-  int64 id = 1;
+  int64 id = 1;  //
   string name = 2;
   string description = 3;
   repeated Ingredient ingredients = 4;
