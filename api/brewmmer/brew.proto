@@ -3,7 +3,7 @@ syntax = "proto3";
 package brewmmer;
 
 import "google/protobuf/timestamp.proto";
-import "api/brewmmer/recepie.proto";
+import "api/brewmmer/recipe.proto";
 
 service BrewService {
   rpc StartBrew (StartBrewRequest) returns (StartBrewResponse);
