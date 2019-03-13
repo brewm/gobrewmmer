@@ -46,28 +46,38 @@ func (rss *recipeServiceServer) Create(ctx context.Context, req *brewmmer.Create
 }
 
 func (rss *recipeServiceServer) Get(ctx context.Context, req *brewmmer.GetRecipeRequest) (*brewmmer.GetRecipeResponse, error) {
+	recipe, err := fetchRecipe(rss.db, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &brewmmer.GetRecipeResponse{
+		Recipe: recipe,
+	}, nil
+}
+
+func fetchRecipe(db *sql.DB, id int64) (*brewmmer.Recipe, error) {
 	sqlStatement := `
     SELECT
       recipe
     FROM recipes
     WHERE id=$1`
-	row := rss.db.QueryRow(sqlStatement, req.Id)
+	row := db.QueryRow(sqlStatement, id)
 
-	var recipeJson string
-	row.Scan(&recipeJson)
+	var recipeJSON string
+	row.Scan(&recipeJSON)
 
 	um := jsonpb.Unmarshaler{}
 	recipe := &brewmmer.Recipe{}
-	err := um.Unmarshal(strings.NewReader(recipeJson), recipe)
+	err := um.Unmarshal(strings.NewReader(recipeJSON), recipe)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
 	}
 
 	// Fix ID
-	recipe.Id = req.Id
-	return &brewmmer.GetRecipeResponse{
-		Recipe: recipe,
-	}, nil
+	recipe.Id = id
+
+	return recipe, nil
 }
 
 func (rss *recipeServiceServer) Delete(ctx context.Context, req *brewmmer.DeleteRecipeRequest) (*brewmmer.DeleteRecipeResponse, error) {

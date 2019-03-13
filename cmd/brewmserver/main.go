@@ -47,10 +47,11 @@ func main() {
 	ctx := context.Background()
 
 	recipeAPI := brewmmer.NewRecipeServiceServer(db)
+	brewAPI := brewmmer.NewBrewServiceServer(db)
 	sessionAPI := brewmmer.NewSessionServiceServer(db)
 	temperatureAPI := brewmmer.NewTemperatureServiceServer()
 
-	grpc.RunServer(ctx, recipeAPI, sessionAPI, temperatureAPI, grpcPort)
+	grpc.RunServer(ctx, recipeAPI, sessionAPI, brewAPI, temperatureAPI, grpcPort)
 }
 
 func getEnv(key, fallback string) string {

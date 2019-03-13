@@ -11,8 +11,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-// RunServer runs gRPC service to publish ToDo service
-func RunServer(ctx context.Context, recipeAPI brewmmer.RecipeServiceServer, sessionAPI brewmmer.SessionServiceServer, temperatureAPI brewmmer.TemperatureServiceServer, port string) error {
+// RunServer runs gRPC service to publish Brewm services
+func RunServer(ctx context.Context,
+	recipeAPI brewmmer.RecipeServiceServer,
+	sessionAPI brewmmer.SessionServiceServer,
+	brewAPI brewmmer.BrewServiceServer,
+	temperatureAPI brewmmer.TemperatureServiceServer,
+	port string) error {
+
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
@@ -21,6 +27,7 @@ func RunServer(ctx context.Context, recipeAPI brewmmer.RecipeServiceServer, sess
 	// register service
 	server := grpc.NewServer()
 	brewmmer.RegisterRecipeServiceServer(server, recipeAPI)
+	brewmmer.RegisterBrewServiceServer(server, brewAPI)
 	brewmmer.RegisterSessionServiceServer(server, sessionAPI)
 	brewmmer.RegisterTemperatureServiceServer(server, temperatureAPI)
 

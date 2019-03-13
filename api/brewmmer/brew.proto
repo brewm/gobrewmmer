@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package brewmmer;
+
+import "google/protobuf/timestamp.proto";
+import "api/brewmmer/recepie.proto";
+
+service BrewService {
+  rpc StartBrew (StartBrewRequest) returns (StartBrewResponse);
+  rpc CompleteBrewStep (CompleteBrewStepRequest) returns (CompleteBrewStepResponse);
+  rpc StopBrew (StopBrewRequest) returns (StopBrewResponse);
+  rpc GetBrew (GetBrewRequest) returns (GetBrewResponse);
+  rpc GetActiveBrew (GetActiveBrewRequest) returns (GetActiveBrewResponse);
+  rpc ListBrews (ListBrewRequest) returns (ListBrewResponse);
+}
+
+message StartBrewRequest {
+  int64 recipeId = 1;
+  string note = 2;
+}
+
+message StartBrewResponse {
+  int64 id = 1;
+}
+
+message CompleteBrewStepRequest {
+  int64 id = 1;
+}
+
+message CompleteBrewStepResponse {
+  brewmmer.Step nextStep = 1;
+}
+
+message StopBrewRequest {
+  int64 id = 1;
+}
+
+message StopBrewResponse {
+}
+
+message GetBrewRequest {
+  int64 id = 1;
+}
+
+message GetBrewResponse {
+  Brew brew = 1;
+}
+
+message GetActiveBrewRequest {
+}
+
+message GetActiveBrewResponse {
+  Brew brew = 1;
+}
+
+message ListBrewRequest {
+}
+
+message ListBrewResponse {
+  repeated Brew brews = 1;
+}
+
+
+// brewmctl start brew
+// -> brew id #1
+// brewmctl get brew step 1
+// -> 	 MASHING 	 65 	 45 MIN
+// or
+// ->	 SPARGING 	 55
+//		   Type 	 Name 	 Quantity
+//		   WATER 	 Sparge water 	 25 L
+// brewmctl complete brew step
+// -> Step completed
+// -> Next step:
+// brewmctl get brew step 1
+
+message Brew {
+    int64 id = 1;
+    google.protobuf.Timestamp startTime = 2;
+    google.protobuf.Timestamp completedTime = 3;
+    brewmmer.Recipe recipe = 4;
+    repeated BrewStep completedSteps = 5;
+    string note = 6;
+}
+
+message BrewStep {
+    google.protobuf.Timestamp startTime = 1;
+    google.protobuf.Timestamp completedTime = 2;
+    brewmmer.Step step = 4;
+}

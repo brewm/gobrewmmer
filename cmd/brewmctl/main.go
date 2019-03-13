@@ -22,6 +22,7 @@ const version = "0.2"
 var endpoint string
 
 var rClient brewmmer.RecipeServiceClient
+var bClient brewmmer.BrewServiceClient
 var sClient brewmmer.SessionServiceClient
 var tClient brewmmer.TemperatureServiceClient
 var ctx context.Context
@@ -31,13 +32,14 @@ func main() {
 	// Set up a connection to the server.
 	endpoint = getEnv("BREWM_ENDPOINT", "localhost:6999")
 
-	conn, err := grpc.Dial("localhost:6999", grpc.WithInsecure())
+	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	if err != nil {
 		fmt.Printf("did not connect: %v", err)
 	}
 	defer conn.Close()
 
 	rClient = brewmmer.NewRecipeServiceClient(conn)
+	bClient = brewmmer.NewBrewServiceClient(conn)
 	sClient = brewmmer.NewSessionServiceClient(conn)
 	tClient = brewmmer.NewTemperatureServiceClient(conn)
 
@@ -53,7 +55,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:  "get",
-			Usage: "get <temperature|sessions|recipes>",
+			Usage: "get <temperature|sessions|recipes|brews>",
 			Subcommands: cli.Commands{
 				cli.Command{
 					Name:   "temperature",
@@ -75,11 +77,19 @@ func main() {
 						cli.BoolFlag{Name: "raw"},
 					},
 				},
+				cli.Command{
+					Name:      "brews",
+					Action:    getBrews,
+					ArgsUsage: "<id>",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "active"},
+					},
+				},
 			},
 		},
 		{
 			Name:  "start",
-			Usage: "start <session|tbd...>",
+			Usage: "start <session|brew|tbd...>",
 			Subcommands: cli.Commands{
 				cli.Command{
 					Name:   "session",
@@ -88,16 +98,29 @@ func main() {
 						cli.StringFlag{Name: "note"},
 					},
 				},
+				cli.Command{
+					Name:      "brew",
+					ArgsUsage: "<recipe_id>",
+					Action:    startBrew,
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "note"},
+					},
+				},
 			},
 		},
 		{
 			Name:  "stop",
-			Usage: "stop <session|tbd...>",
+			Usage: "stop <session|brew|tbd...>",
 			Subcommands: cli.Commands{
 				cli.Command{
 					Name:      "session",
 					ArgsUsage: "<id>",
 					Action:    stopSession,
+				},
+				cli.Command{
+					Name:      "brew",
+					ArgsUsage: "<id>",
+					Action:    stopBrew,
 				},
 			},
 		},
@@ -172,7 +195,7 @@ func getSessions(c *cli.Context) error {
 		prettyPrintSession(res.Session)
 
 	case c.NArg() == 1 && activeFlag:
-		fmt.Println("ERROR: Argument and active flag can't be used togather!")
+		fmt.Println("ERROR: Argument and active flag can't be used together!")
 		cli.ShowSubcommandHelp(c)
 
 	case c.NArg() > 1:
@@ -213,6 +236,111 @@ func stopSession(c *cli.Context) error {
 		Id: id,
 	}
 	_, err = sClient.Stop(ctx, &req)
+	if err != nil {
+		fmt.Printf("ERROR: Grpc call failed: %v", err)
+		return err
+	}
+
+	fmt.Println("Session stopped")
+
+	return nil
+}
+
+func getBrews(c *cli.Context) error {
+	activeFlag := c.Bool("active")
+
+	switch {
+	case c.NArg() == 0 && !activeFlag:
+		req := brewmmer.ListBrewRequest{}
+		_, err := bClient.ListBrews(ctx, &req)
+		if err != nil {
+			fmt.Printf("ERROR: Grpc call failed: %v", err)
+			return err
+		}
+		// prettyPrintBrews(res.Brews)
+
+	case c.NArg() == 0 && activeFlag:
+		req := brewmmer.GetActiveBrewRequest{}
+		res, err := bClient.GetActiveBrew(ctx, &req)
+		if err != nil {
+			fmt.Printf("ERROR: Grpc call failed: %v", err)
+			return err
+		}
+		prettyPrintBrew(res.Brew)
+
+	case c.NArg() == 1:
+		id, err := strconv.ParseInt(c.Args().Get(0), 10, 64)
+		if err != nil {
+			fmt.Printf("Failed to parese id as integer!")
+			return err
+		}
+		req := brewmmer.GetBrewRequest{
+			Id: id,
+		}
+		res, err := bClient.GetBrew(ctx, &req)
+		if err != nil {
+			fmt.Printf("ERROR: Grpc call failed: %v", err)
+			return err
+		}
+		prettyPrintBrew(res.Brew)
+
+	case c.NArg() == 1 && activeFlag:
+		fmt.Println("ERROR: Argument and active flag can't be used together!")
+		cli.ShowSubcommandHelp(c)
+
+	case c.NArg() > 1:
+		fmt.Println("ERROR: Only one argument is accepted!")
+		cli.ShowSubcommandHelp(c)
+	}
+
+	return nil
+}
+
+func startBrew(c *cli.Context) error {
+	if c.NArg() != 1 {
+		fmt.Println("ERROR: Missing command argument!")
+		cli.ShowSubcommandHelp(c)
+		return nil
+	}
+
+	recipeId, err := strconv.ParseInt(c.Args().Get(0), 10, 64)
+	if err != nil {
+		fmt.Printf("Failed to parese recipe id as integer!")
+		return err
+	}
+
+	req := brewmmer.StartBrewRequest{
+		RecipeId: recipeId,
+	}
+
+	res, err := bClient.StartBrew(ctx, &req)
+	if err != nil {
+		fmt.Printf("ERROR: Grpc call failed: %v", err)
+		return err
+	}
+
+	fmt.Println("Brew created with id: ", res.Id)
+
+	return nil
+}
+
+func stopBrew(c *cli.Context) error {
+	if c.NArg() != 1 {
+		fmt.Println("ERROR: Missing command argument!")
+		cli.ShowSubcommandHelp(c)
+		return nil
+	}
+
+	id, err := strconv.ParseInt(c.Args().Get(0), 10, 64)
+	if err != nil {
+		fmt.Printf("Failed to parese id as integer!")
+		return err
+	}
+
+	req := brewmmer.StopBrewRequest{
+		Id: id,
+	}
+	_, err = bClient.StopBrew(ctx, &req)
 	if err != nil {
 		fmt.Printf("ERROR: Grpc call failed: %v", err)
 		return err
@@ -381,6 +509,28 @@ func prettyPrintRecipe(r *brewmmer.Recipe) {
 			fmt.Println("\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
 		}
 	}
+}
+
+func prettyPrintBrew(r *brewmmer.Brew) {
+	fmt.Println("Id: ", r.Id)
+	fmt.Println("Note: ", r.Note)
+	fmt.Println("StartTime: ", r.StartTime)
+	fmt.Println("Finished Steps: ")
+	// fmt.Println("\t", "Type", "\t", "Name", "\t", "Quantity")
+	// for _, i := range r.Ingredients {
+	// 	fmt.Println("\t", i.Type, "\t", i.Name, "\t", quantityToStr(i.Quantity))
+	// }
+	// fmt.Println("Steps: ")
+	// fmt.Println("\t", "Phase", "\t", "Temperature", "\t", "Duration")
+	// for _, s := range r.Steps {
+	// 	fmt.Println("\t", s.Phase, "\t", s.Temperature, "\t", quantityToStr(s.Duration))
+	// 	if len(s.Ingredients) != 0 {
+	// 		fmt.Println("\t\t", "Type", "\t", "Name", "\t", "Quantity")
+	// 	}
+	// 	for _, si := range s.Ingredients {
+	// 		fmt.Println("\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
+	// 	}
+	// }
 }
 
 func getEnv(key, fallback string) string {

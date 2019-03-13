@@ -110,10 +110,10 @@ func (sss *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.Ge
 	// Making sure to return only one session
 	sqlStatement := `
 	SELECT
-	MAX(id),
-	start_time,
-	stop_time,
-	note
+		MAX(id),
+		start_time,
+		stop_time,
+		note
 	FROM sessions
 	WHERE stop_time IS NULL`
 	row := sss.db.QueryRow(sqlStatement)
