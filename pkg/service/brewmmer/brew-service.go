@@ -26,6 +26,17 @@ func NewBrewServiceServer(db *sql.DB) brewmmer.BrewServiceServer {
 }
 
 func (bss *brewServiceServer) StartBrew(ctx context.Context, req *brewmmer.StartBrewRequest) (*brewmmer.StartBrewResponse, error) {
+	brew, err := fetchActiveBrew(bss.db)
+
+	st, _ := status.FromError(err)
+	if st.Code() != codes.NotFound {
+		return nil, err
+	}
+
+	if brew != nil {
+		return nil, errors.New("brew is already in progress, one brew can be active at a time")
+	}
+
 	timestamp := time.Now()
 
 	sqlStatement := `
@@ -53,10 +64,6 @@ func (bss *brewServiceServer) CompleteBrewStep(ctx context.Context, req *brewmme
 		return nil, err
 	}
 
-	if brew != nil {
-		return nil, errors.New("No brew is active atm")
-	}
-
 	completedSteps := brew.CompletedSteps
 	completedStepCount := len(completedSteps)
 	var nextStep *brewmmer.Step
@@ -71,13 +78,13 @@ func (bss *brewServiceServer) CompleteBrewStep(ctx context.Context, req *brewmme
 	m := jsonpb.Marshaler{}
 	stepJSON, err := m.MarshalToString(nextStep)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "json marshaling error-> "+err.Error())
+		return nil, status.Error(codes.Internal, "json marshaling error-> "+err.Error())
 	}
 
 	sqlStatement := `INSERT INTO brew_steps (start_time, step, brew_id) VALUES ($1, $2, $3)`
 	_, err = bss.db.Exec(sqlStatement, time.Now(), stepJSON, req.Id)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to insert into brew_steps-> "+err.Error())
+		return nil, status.Error(codes.Internal, "failed to insert into brew_steps-> "+err.Error())
 	}
 
 	return &brewmmer.CompleteBrewStepResponse{
@@ -113,7 +120,7 @@ func (bss *brewServiceServer) StopBrew(ctx context.Context, req *brewmmer.StopBr
 	}
 
 	if isActive == false {
-		return nil, errors.New("given brew is not active, can't stop")
+		return nil, status.Error(codes.InvalidArgument, "given brew is not active, can't stop")
 	}
 
 	sqlStatement = `
@@ -246,7 +253,7 @@ func fetchActiveBrew(db *sql.DB) (*brewmmer.Brew, error) {
 	}
 
 	if id == nil {
-		return nil, status.Error(codes.Unknown, "No actibe brew was found!")
+		return nil, status.Error(codes.NotFound, "No actibe brew was found!")
 	}
 
 	return fetchBrew(db, *id)
@@ -309,7 +316,7 @@ func fetchCompletedSteps(db *sql.DB, brew *brewmmer.Brew) error {
 		step := &brewmmer.Step{}
 		err := um.Unmarshal(strings.NewReader(*stepJSON), step)
 		if err != nil {
-			return status.Error(codes.Unknown, "json unmarshaling error-> "+err.Error())
+			return status.Error(codes.Internal, "json unmarshaling error-> "+err.Error())
 		}
 
 		bs.Step = step
