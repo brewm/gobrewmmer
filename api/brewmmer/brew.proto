@@ -60,20 +60,6 @@ message ListBrewResponse {
   repeated Brew brews = 1;
 }
 
-
-// brewmctl start brew
-// -> brew id #1
-// brewmctl get brew step 1
-// -> 	 MASHING 	 65 	 45 MIN
-// or
-// ->	 SPARGING 	 55
-//		   Type 	 Name 	 Quantity
-//		   WATER 	 Sparge water 	 25 L
-// brewmctl complete brew step
-// -> Step completed
-// -> Next step:
-// brewmctl get brew step 1
-
 message Brew {
     int64 id = 1;
     google.protobuf.Timestamp startTime = 2;

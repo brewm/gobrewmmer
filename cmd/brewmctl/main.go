@@ -135,6 +135,17 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:  "complete",
+			Usage: "complete <step|tbd...>",
+			Subcommands: cli.Commands{
+				cli.Command{
+					Name:      "step",
+					Action:    completeStep,
+					ArgsUsage: "<brew_id>",
+				},
+			},
+		},
 	}
 
 	err = app.Run(os.Args)
@@ -351,6 +362,35 @@ func stopBrew(c *cli.Context) error {
 	return nil
 }
 
+func completeStep(c *cli.Context) error {
+	if c.NArg() != 1 {
+		fmt.Println("ERROR: Missing command argument!")
+		cli.ShowSubcommandHelp(c)
+		return nil
+	}
+
+	id, err := strconv.ParseInt(c.Args().Get(0), 10, 64)
+	if err != nil {
+		fmt.Printf("Failed to parese id as integer!")
+		return err
+	}
+
+	req := brewmmer.CompleteBrewStepRequest{
+		Id: id,
+	}
+	res, err := bClient.CompleteBrewStep(ctx, &req)
+	if err != nil {
+		fmt.Printf("ERROR: Grpc call failed: %v", err)
+		return err
+	}
+
+	fmt.Println("Step completed, next Step:")
+	fmt.Println("\t", "Phase", "\t", "Temperature", "\t", "Duration")
+	prettyPrintStep(res.NextStep)
+
+	return nil
+}
+
 func createRecipe(c *cli.Context) error {
 	if c.NArg() != 1 {
 		fmt.Println("ERROR: Missing command argument!")
@@ -448,22 +488,22 @@ func prettyPrintSessions(ss []*brewmmer.Session) {
 	var maybeTimestamp func(*timestamp.Timestamp) string
 	maybeTimestamp = func(t *timestamp.Timestamp) string {
 		if t != nil {
-			return ptypes.TimestampString(t)
+			return getTimeString(t)
 		}
 		return "-"
 	}
 
 	fmt.Println("ID", "\t", "StartTime", "\t", "StopTime", "\t", "Note")
 	for _, s := range ss {
-		fmt.Println(s.Id, "\t", ptypes.TimestampString(s.StartTime), "\t", maybeTimestamp(s.StopTime), "\t", s.Note)
+		fmt.Println(s.Id, "\t", getTimeString(s.StartTime), "\t", maybeTimestamp(s.StopTime), "\t", s.Note)
 	}
 }
 
 func prettyPrintSession(s *brewmmer.Session) {
 	fmt.Println("Note: ", s.Note)
-	fmt.Println("Start Time: ", ptypes.TimestampString(s.StartTime))
+	fmt.Println("Start Time: ", getTimeString(s.StartTime))
 	if s.StopTime != nil {
-		fmt.Println("Stop Time: ", ptypes.TimestampString(s.StopTime))
+		fmt.Println("Stop Time: ", getTimeString(s.StopTime))
 	} else {
 		fmt.Println("Stop Time: ", "-")
 	}
@@ -471,7 +511,7 @@ func prettyPrintSession(s *brewmmer.Session) {
 
 	fmt.Println("\t", "Timestamp", "\t", "Temperature")
 	for _, m := range s.Measurements {
-		fmt.Println("\t", ptypes.TimestampString(m.Timestamp), "\t", m.Temperature)
+		fmt.Println("\t", getTimeString(m.Timestamp), "\t", m.Temperature)
 	}
 }
 
@@ -483,14 +523,6 @@ func prettyPrintRecipes(rs []*brewmmer.Recipe) {
 }
 
 func prettyPrintRecipe(r *brewmmer.Recipe) {
-	var quantityToStr func(*brewmmer.Quantity) string
-	quantityToStr = func(q *brewmmer.Quantity) string {
-		if q != nil {
-			return fmt.Sprint(q.Volume, " ", q.Unit)
-		}
-		return ""
-	}
-
 	fmt.Println("Name: ", r.Name)
 	fmt.Println("Description: ", r.Description)
 	fmt.Println("Ingredients: ")
@@ -501,36 +533,64 @@ func prettyPrintRecipe(r *brewmmer.Recipe) {
 	fmt.Println("Steps: ")
 	fmt.Println("\t", "Phase", "\t", "Temperature", "\t", "Duration")
 	for _, s := range r.Steps {
-		fmt.Println("\t", s.Phase, "\t", s.Temperature, "\t", quantityToStr(s.Duration))
-		if len(s.Ingredients) != 0 {
-			fmt.Println("\t\t", "Type", "\t", "Name", "\t", "Quantity")
-		}
-		for _, si := range s.Ingredients {
-			fmt.Println("\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
-		}
+		prettyPrintStep(s)
 	}
 }
 
 func prettyPrintBrew(r *brewmmer.Brew) {
 	fmt.Println("Id: ", r.Id)
 	fmt.Println("Note: ", r.Note)
-	fmt.Println("StartTime: ", r.StartTime)
+	fmt.Println("StartTime: ", getTimeString(r.StartTime))
+	fmt.Println("CompletedTime: ", getTimeString(r.CompletedTime))
+	fmt.Println("Active Step: ")
+	fmt.Println("\t", "StartTime", "\t", "CompletedTime", "\t", "Phase", "\t", "Temperature", "\t", "Duration")
+	prettyPrintBrewStep(r.CompletedSteps[len(r.CompletedSteps)-1])
+
 	fmt.Println("Finished Steps: ")
-	// fmt.Println("\t", "Type", "\t", "Name", "\t", "Quantity")
-	// for _, i := range r.Ingredients {
-	// 	fmt.Println("\t", i.Type, "\t", i.Name, "\t", quantityToStr(i.Quantity))
-	// }
-	// fmt.Println("Steps: ")
-	// fmt.Println("\t", "Phase", "\t", "Temperature", "\t", "Duration")
-	// for _, s := range r.Steps {
-	// 	fmt.Println("\t", s.Phase, "\t", s.Temperature, "\t", quantityToStr(s.Duration))
-	// 	if len(s.Ingredients) != 0 {
-	// 		fmt.Println("\t\t", "Type", "\t", "Name", "\t", "Quantity")
-	// 	}
-	// 	for _, si := range s.Ingredients {
-	// 		fmt.Println("\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
-	// 	}
-	// }
+	fmt.Println("\t", "StartTime", "\t", "CompletedTime", "\t", "Phase", "\t", "Temperature", "\t", "Duration")
+	for _, step := range r.CompletedSteps[:len(r.CompletedSteps)-1] {
+		if step.CompletedTime != nil {
+			prettyPrintBrewStep(step)
+		}
+	}
+}
+
+func prettyPrintBrewStep(step *brewmmer.BrewStep) {
+	fmt.Println("\t", getTimeString(step.StartTime), "\t", getTimeString(step.CompletedTime), "\t", step.Step.Phase, "\t", step.Step.Temperature, "\t", quantityToStr(step.Step.Duration))
+	if len(step.Step.Ingredients) != 0 {
+		fmt.Println("\t\t", "Type", "\t", "Name", "\t", "Quantity")
+	}
+	for _, si := range step.Step.Ingredients {
+		fmt.Println("\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
+	}
+}
+
+func prettyPrintStep(s *brewmmer.Step) {
+	fmt.Println("\t", s.Phase, "\t", s.Temperature, "\t", quantityToStr(s.Duration))
+	if len(s.Ingredients) != 0 {
+		fmt.Println("\t\t", "Type", "\t", "Name", "\t", "Quantity")
+	}
+	for _, si := range s.Ingredients {
+		fmt.Println("\t\t", si.Type, "\t", si.Name, "\t", quantityToStr(si.Quantity))
+	}
+}
+
+func quantityToStr(q *brewmmer.Quantity) string {
+	if q != nil {
+		return fmt.Sprint(q.Volume, " ", q.Unit)
+	}
+	return ""
+}
+
+func getTimeString(ts *timestamp.Timestamp) string {
+	t, err := ptypes.Timestamp(ts)
+	if err != nil {
+		return fmt.Sprintf("(%v)", err)
+	}
+	if t.Year() == 1970 {
+		return "<n/a>"
+	}
+	return t.Format(time.RFC3339)
 }
 
 func getEnv(key, fallback string) string {

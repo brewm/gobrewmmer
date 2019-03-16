@@ -36,7 +36,7 @@ func (m *StartBrewRequest) Reset()         { *m = StartBrewRequest{} }
 func (m *StartBrewRequest) String() string { return proto.CompactTextString(m) }
 func (*StartBrewRequest) ProtoMessage()    {}
 func (*StartBrewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{0}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{0}
 }
 func (m *StartBrewRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartBrewRequest.Unmarshal(m, b)
@@ -81,7 +81,7 @@ func (m *StartBrewResponse) Reset()         { *m = StartBrewResponse{} }
 func (m *StartBrewResponse) String() string { return proto.CompactTextString(m) }
 func (*StartBrewResponse) ProtoMessage()    {}
 func (*StartBrewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{1}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{1}
 }
 func (m *StartBrewResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartBrewResponse.Unmarshal(m, b)
@@ -119,7 +119,7 @@ func (m *CompleteBrewStepRequest) Reset()         { *m = CompleteBrewStepRequest
 func (m *CompleteBrewStepRequest) String() string { return proto.CompactTextString(m) }
 func (*CompleteBrewStepRequest) ProtoMessage()    {}
 func (*CompleteBrewStepRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{2}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{2}
 }
 func (m *CompleteBrewStepRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CompleteBrewStepRequest.Unmarshal(m, b)
@@ -157,7 +157,7 @@ func (m *CompleteBrewStepResponse) Reset()         { *m = CompleteBrewStepRespon
 func (m *CompleteBrewStepResponse) String() string { return proto.CompactTextString(m) }
 func (*CompleteBrewStepResponse) ProtoMessage()    {}
 func (*CompleteBrewStepResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{3}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{3}
 }
 func (m *CompleteBrewStepResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CompleteBrewStepResponse.Unmarshal(m, b)
@@ -195,7 +195,7 @@ func (m *StopBrewRequest) Reset()         { *m = StopBrewRequest{} }
 func (m *StopBrewRequest) String() string { return proto.CompactTextString(m) }
 func (*StopBrewRequest) ProtoMessage()    {}
 func (*StopBrewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{4}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{4}
 }
 func (m *StopBrewRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StopBrewRequest.Unmarshal(m, b)
@@ -232,7 +232,7 @@ func (m *StopBrewResponse) Reset()         { *m = StopBrewResponse{} }
 func (m *StopBrewResponse) String() string { return proto.CompactTextString(m) }
 func (*StopBrewResponse) ProtoMessage()    {}
 func (*StopBrewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{5}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{5}
 }
 func (m *StopBrewResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StopBrewResponse.Unmarshal(m, b)
@@ -263,7 +263,7 @@ func (m *GetBrewRequest) Reset()         { *m = GetBrewRequest{} }
 func (m *GetBrewRequest) String() string { return proto.CompactTextString(m) }
 func (*GetBrewRequest) ProtoMessage()    {}
 func (*GetBrewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{6}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{6}
 }
 func (m *GetBrewRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetBrewRequest.Unmarshal(m, b)
@@ -301,7 +301,7 @@ func (m *GetBrewResponse) Reset()         { *m = GetBrewResponse{} }
 func (m *GetBrewResponse) String() string { return proto.CompactTextString(m) }
 func (*GetBrewResponse) ProtoMessage()    {}
 func (*GetBrewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{7}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{7}
 }
 func (m *GetBrewResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetBrewResponse.Unmarshal(m, b)
@@ -338,7 +338,7 @@ func (m *GetActiveBrewRequest) Reset()         { *m = GetActiveBrewRequest{} }
 func (m *GetActiveBrewRequest) String() string { return proto.CompactTextString(m) }
 func (*GetActiveBrewRequest) ProtoMessage()    {}
 func (*GetActiveBrewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{8}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{8}
 }
 func (m *GetActiveBrewRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetActiveBrewRequest.Unmarshal(m, b)
@@ -369,7 +369,7 @@ func (m *GetActiveBrewResponse) Reset()         { *m = GetActiveBrewResponse{} }
 func (m *GetActiveBrewResponse) String() string { return proto.CompactTextString(m) }
 func (*GetActiveBrewResponse) ProtoMessage()    {}
 func (*GetActiveBrewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{9}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{9}
 }
 func (m *GetActiveBrewResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetActiveBrewResponse.Unmarshal(m, b)
@@ -406,7 +406,7 @@ func (m *ListBrewRequest) Reset()         { *m = ListBrewRequest{} }
 func (m *ListBrewRequest) String() string { return proto.CompactTextString(m) }
 func (*ListBrewRequest) ProtoMessage()    {}
 func (*ListBrewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{10}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{10}
 }
 func (m *ListBrewRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListBrewRequest.Unmarshal(m, b)
@@ -437,7 +437,7 @@ func (m *ListBrewResponse) Reset()         { *m = ListBrewResponse{} }
 func (m *ListBrewResponse) String() string { return proto.CompactTextString(m) }
 func (*ListBrewResponse) ProtoMessage()    {}
 func (*ListBrewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{11}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{11}
 }
 func (m *ListBrewResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListBrewResponse.Unmarshal(m, b)
@@ -480,7 +480,7 @@ func (m *Brew) Reset()         { *m = Brew{} }
 func (m *Brew) String() string { return proto.CompactTextString(m) }
 func (*Brew) ProtoMessage()    {}
 func (*Brew) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{12}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{12}
 }
 func (m *Brew) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Brew.Unmarshal(m, b)
@@ -555,7 +555,7 @@ func (m *BrewStep) Reset()         { *m = BrewStep{} }
 func (m *BrewStep) String() string { return proto.CompactTextString(m) }
 func (*BrewStep) ProtoMessage()    {}
 func (*BrewStep) Descriptor() ([]byte, []int) {
-	return fileDescriptor_brew_725d33a064ae22f5, []int{13}
+	return fileDescriptor_brew_7f6eb98ec0e452da, []int{13}
 }
 func (m *BrewStep) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BrewStep.Unmarshal(m, b)
@@ -850,9 +850,9 @@ var _BrewService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/brewmmer/brew.proto",
 }
 
-func init() { proto.RegisterFile("api/brewmmer/brew.proto", fileDescriptor_brew_725d33a064ae22f5) }
+func init() { proto.RegisterFile("api/brewmmer/brew.proto", fileDescriptor_brew_7f6eb98ec0e452da) }
 
-var fileDescriptor_brew_725d33a064ae22f5 = []byte{
+var fileDescriptor_brew_7f6eb98ec0e452da = []byte{
 	// 538 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0x5d, 0x6f, 0xd3, 0x30,
 	0x14, 0x55, 0xda, 0xac, 0xa4, 0xb7, 0x5a, 0xdb, 0x59, 0xc0, 0x52, 0x23, 0xb1, 0xce, 0xf0, 0x50,
