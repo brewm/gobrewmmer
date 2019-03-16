@@ -1,80 +1,62 @@
 package main
 
 import (
-  "os"
-  "database/sql"
-  _ "github.com/mattn/go-sqlite3"
+	"context"
+	"database/sql"
+	"os"
 
-  "github.com/gin-gonic/gin"
-  log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
-  "github.com/brewm/gobrewmmer/cmd/brewmserver/brewmapi"
-  "github.com/brewm/gobrewmmer/cmd/brewmserver/global"
+	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/brewm/gobrewmmer/pkg/protocol/grpc"
+	"github.com/brewm/gobrewmmer/pkg/service/brewmmer"
 )
 
-func init() {
-  initLogger()
-  initDB()
-  brewmapi.RestartActiveSession()
-}
-
+// RunServer runs gRPC server and HTTP gateway
 func main() {
-  defer global.BrewmDB.Close()
+	// Configure logging
+	log.SetLevel(log.InfoLevel)
+	log.SetOutput(os.Stderr)
 
-  router := gin.Default()
+	// Get config
+	dbPath := getEnv("BREWM_DB_PATH", "./brewmmer.db")
+	grpcPort := getEnv("BREWM_GRPC_PORT", "6999")
 
-  router.GET("/ping", func(c *gin.Context) {
-    c.JSON(200, gin.H{
-      "message": "pong",
-    })
-  })
+	// Set up db
+	_, fileErr := os.Stat(dbPath)
+	if os.IsNotExist(fileErr) {
+		log.WithFields(log.Fields{
+			"dbPath": dbPath,
+		}).Fatal("Database file doesn't exist!")
+	}
 
-  v1 := router.Group("/v1/")
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Fatal("Database connection failed!")
+	}
+	defer db.Close()
 
-  v1.GET("/sense", brewmapi.Sense)
-  sessions := v1.Group("/sessions")
-  {
-    sessions.GET("/",    brewmapi.AllSession)
-    sessions.GET("/:id", brewmapi.SingleSession)
-    sessions.POST("/",   brewmapi.StartSession)
-    sessions.PUT("/",    brewmapi.StopSession)
-  }
+	log.WithFields(log.Fields{
+		"dbPath": dbPath,
+	}).Info("Database connection was successfull!")
 
-  router.Run() // listen and serve on 0.0.0.0:8080
-}
+	// Start GRPC server
+	ctx := context.Background()
 
-func initLogger() {
-  log.SetLevel(log.InfoLevel)
-  log.SetOutput(os.Stderr)
-}
+	recipeAPI := brewmmer.NewRecipeServiceServer(db)
+	brewAPI := brewmmer.NewBrewServiceServer(db)
+	sessionAPI := brewmmer.NewSessionServiceServer(db)
+	temperatureAPI := brewmmer.NewTemperatureServiceServer()
 
-func initDB() {
-  dbPath := getEnv("BREWM_DB_PATH", "./brewmmer.db")
-
-
-  _, fileErr := os.Stat(dbPath)
-  if os.IsNotExist(fileErr) {
-    log.WithFields(log.Fields{
-      "dbPath": dbPath,
-    }).Fatal("Database file doesn't exist!")
-  }
-
-  var dbErr error
-  global.BrewmDB, dbErr = sql.Open("sqlite3", dbPath)
-  if dbErr != nil {
-    log.WithFields(log.Fields{
-      "err": dbErr,
-    }).Fatal("Database connection failed!")
-  }
-
-  log.WithFields(log.Fields{
-    "dbPath": dbPath,
-  }).Info("Database connection was successfull!")
+	grpc.RunServer(ctx, recipeAPI, sessionAPI, brewAPI, temperatureAPI, grpcPort)
 }
 
 func getEnv(key, fallback string) string {
-  if value, ok := os.LookupEnv(key); ok {
-    return value
-  }
-  return fallback
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }

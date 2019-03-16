@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package brewmmer;
+
+import "google/protobuf/timestamp.proto";
+
+
+service SessionService {
+  rpc Get (GetSessionRequest) returns (GetSessionResponse);
+  rpc GetActive (GetActiveSessionRequest) returns (GetSessionResponse);
+  rpc List (ListSessionRequest) returns (ListSessionResponse);
+  rpc Start (StartSessionRequest) returns (StartSessionResponse);
+  rpc Stop (StopSessionRequest) returns (StopSessionResponse);
+}
+
+message GetSessionRequest {
+  int64 id = 1;
+}
+
+message GetSessionResponse {
+  Session session = 1;
+}
+
+message GetActiveSessionRequest {}
+
+message StartSessionRequest {
+  string note = 1;
+}
+
+message StartSessionResponse {
+  int64 id = 1;
+}
+
+message StopSessionRequest {
+  int64 id = 1;
+}
+
+message StopSessionResponse {}
+
+message ListSessionRequest {}
+
+message ListSessionResponse {
+  repeated Session sessions = 1;
+}
+
+
+message Session {
+  int64 id = 1;
+  google.protobuf.Timestamp startTime = 2;
+  google.protobuf.Timestamp stopTime = 3;
+  repeated Measurement measurements = 4;
+  string note = 5;
+}
+
+message Measurement {
+  google.protobuf.Timestamp timestamp = 1;
+  double Temperature = 2;
+}
