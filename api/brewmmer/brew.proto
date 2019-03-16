@@ -65,7 +65,7 @@ message Brew {
     google.protobuf.Timestamp startTime = 2;
     google.protobuf.Timestamp completedTime = 3;
     brewmmer.Recipe recipe = 4;
-    repeated BrewStep completedSteps = 5;
+    repeated BrewStep brewSteps = 5;
     string note = 6;
 }
 

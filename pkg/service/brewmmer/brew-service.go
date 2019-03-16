@@ -74,15 +74,15 @@ func (bss *brewServiceServer) CompleteBrewStep(ctx context.Context, req *brewmme
 		return nil, err
 	}
 
-	completedSteps := brew.CompletedSteps
-	completedStepCount := len(completedSteps)
+	brewSteps := brew.BrewSteps
+	completedStepCount := len(brewSteps)
 	var nextStep *brewmmer.Step
 	var lastStep *brewmmer.BrewStep
 
 	if completedStepCount == 0 {
 		nextStep = brew.Recipe.Steps[0]
 	} else {
-		lastStep = completedSteps[completedStepCount-1]
+		lastStep = brewSteps[completedStepCount-1]
 		nextStep = getNextStep(lastStep.Step, brew.Recipe)
 	}
 
@@ -267,7 +267,7 @@ func fetchBrew(db *sql.DB, id int64) (*brewmmer.Brew, error) {
 	}
 	brew.Recipe = recipe
 
-	err = fetchCompletedSteps(db, brew)
+	err = fetchBrewSteps(db, brew)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +315,7 @@ func (bss *brewServiceServer) ListBrews(ctx context.Context, req *brewmmer.ListB
 	panic("not implemented")
 }
 
-func fetchCompletedSteps(db *sql.DB, brew *brewmmer.Brew) error {
+func fetchBrewSteps(db *sql.DB, brew *brewmmer.Brew) error {
 	log.WithFields(log.Fields{"brew_id": brew.Id}).Debug("Getting completed steps!")
 
 	sqlStatement := `
@@ -373,7 +373,7 @@ func fetchCompletedSteps(db *sql.DB, brew *brewmmer.Brew) error {
 
 		bs.Step = step
 
-		brew.CompletedSteps = append(brew.CompletedSteps, bs)
+		brew.BrewSteps = append(brew.BrewSteps, bs)
 	}
 	err = rows.Err()
 	if err != nil {

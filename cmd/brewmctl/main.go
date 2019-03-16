@@ -544,11 +544,11 @@ func prettyPrintBrew(r *brewmmer.Brew) {
 	fmt.Println("CompletedTime: ", getTimeString(r.CompletedTime))
 	fmt.Println("Active Step: ")
 	fmt.Println("\t", "StartTime", "\t", "CompletedTime", "\t", "Phase", "\t", "Temperature", "\t", "Duration")
-	prettyPrintBrewStep(r.CompletedSteps[len(r.CompletedSteps)-1])
+	prettyPrintBrewStep(r.BrewSteps[len(r.BrewSteps)-1])
 
 	fmt.Println("Finished Steps: ")
 	fmt.Println("\t", "StartTime", "\t", "CompletedTime", "\t", "Phase", "\t", "Temperature", "\t", "Duration")
-	for _, step := range r.CompletedSteps[:len(r.CompletedSteps)-1] {
+	for _, step := range r.BrewSteps[:len(r.BrewSteps)-1] {
 		if step.CompletedTime != nil {
 			prettyPrintBrewStep(step)
 		}
