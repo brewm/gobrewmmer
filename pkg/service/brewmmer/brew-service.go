@@ -25,6 +25,32 @@ func NewBrewServiceServer(db *sql.DB) brewmmer.BrewServiceServer {
 	return &brewServiceServer{db: db}
 }
 
+func (bss *brewServiceServer) GetActiveBrew(ctx context.Context, req *brewmmer.GetActiveBrewRequest) (*brewmmer.GetActiveBrewResponse, error) {
+	log.Info("Getting active brew!")
+	brew, err := fetchActiveBrew(bss.db)
+
+	return &brewmmer.GetActiveBrewResponse{
+		Brew: brew,
+	}, err
+}
+
+func (bss *brewServiceServer) GetBrew(ctx context.Context, req *brewmmer.GetBrewRequest) (*brewmmer.GetBrewResponse, error) {
+	log.WithFields(log.Fields{"id": req.Id}).Info("Getting brew!")
+
+	brew, err := fetchBrew(bss.db, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &brewmmer.GetBrewResponse{
+		Brew: brew,
+	}, nil
+}
+
+func (bss *brewServiceServer) ListBrews(ctx context.Context, req *brewmmer.ListBrewRequest) (*brewmmer.ListBrewResponse, error) {
+	panic("not implemented")
+}
+
 func (bss *brewServiceServer) StartBrew(ctx context.Context, req *brewmmer.StartBrewRequest) (*brewmmer.StartBrewResponse, error) {
 	brew, err := fetchActiveBrew(bss.db)
 
@@ -107,52 +133,6 @@ func (bss *brewServiceServer) CompleteBrewStep(ctx context.Context, req *brewmme
 	}, nil
 }
 
-func insertNextStep(db *sql.DB, brewID int64, nextStep *brewmmer.Step) error {
-	m := jsonpb.Marshaler{}
-	stepJSON, err := m.MarshalToString(nextStep)
-	if err != nil {
-		return status.Error(codes.Internal, "json marshaling error-> "+err.Error())
-	}
-
-	sqlStatement := `INSERT INTO brew_steps (brew_id, start_time, step) VALUES ($1, $2, $3)`
-	_, err = db.Exec(sqlStatement, brewID, time.Now(), stepJSON)
-	if err != nil {
-		return status.Error(codes.Internal, "failed to insert into brew_steps-> "+err.Error())
-	}
-
-	return nil
-}
-
-func updateLastStepCompletedTime(db *sql.DB, brewID int64, nextStep *brewmmer.BrewStep) error {
-	m := jsonpb.Marshaler{}
-	stepJSON, err := m.MarshalToString(nextStep.Step)
-	if err != nil {
-		return status.Error(codes.Internal, "json marshaling error-> "+err.Error())
-	}
-
-	sqlStatement := `UPDATE brew_steps
-	SET completed_time = $1
-	WHERE brew_id = $2
-	AND step = $3`
-
-	_, err = db.Exec(sqlStatement, time.Now(), brewID, stepJSON)
-	if err != nil {
-		return status.Error(codes.Internal, "failed update brew_step completed_time-> "+err.Error())
-	}
-
-	return nil
-
-}
-
-func getNextStep(lastStep *brewmmer.Step, recipe *brewmmer.Recipe) *brewmmer.Step {
-	for i, step := range recipe.Steps {
-		if reflect.DeepEqual(lastStep, step) {
-			return recipe.Steps[i+1]
-		}
-	}
-	return nil
-}
-
 func (bss *brewServiceServer) StopBrew(ctx context.Context, req *brewmmer.StopBrewRequest) (*brewmmer.StopBrewResponse, error) {
 	sqlStatement := `
     SELECT (CASE WHEN completed_time IS NULL THEN 1 ELSE 0 END) as is_active
@@ -195,17 +175,35 @@ func (bss *brewServiceServer) StopBrew(ctx context.Context, req *brewmmer.StopBr
 	return &brewmmer.StopBrewResponse{}, nil
 }
 
-func (bss *brewServiceServer) GetBrew(ctx context.Context, req *brewmmer.GetBrewRequest) (*brewmmer.GetBrewResponse, error) {
-	log.WithFields(log.Fields{"id": req.Id}).Info("Getting brew!")
+//
+// Helpers
+//
 
-	brew, err := fetchBrew(bss.db, req.Id)
+func fetchActiveBrew(db *sql.DB) (*brewmmer.Brew, error) {
+	// Making sure to return only one session
+	sqlStatement := `
+	SELECT
+		MAX(id)
+	FROM brews
+	WHERE completed_time IS NULL`
+	row := db.QueryRow(sqlStatement)
+
+	var id *int64
+
+	err := row.Scan(&id)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("Find latest brew in 'brews' database query failed!")
+
 		return nil, err
 	}
 
-	return &brewmmer.GetBrewResponse{
-		Brew: brew,
-	}, nil
+	if id == nil {
+		return nil, status.Error(codes.NotFound, "No actibe brew was found!")
+	}
+
+	return fetchBrew(db, *id)
 }
 
 func fetchBrew(db *sql.DB, id int64) (*brewmmer.Brew, error) {
@@ -275,46 +273,6 @@ func fetchBrew(db *sql.DB, id int64) (*brewmmer.Brew, error) {
 	return brew, nil
 }
 
-func (bss *brewServiceServer) GetActiveBrew(ctx context.Context, req *brewmmer.GetActiveBrewRequest) (*brewmmer.GetActiveBrewResponse, error) {
-	log.Info("Getting active brew!")
-	brew, err := fetchActiveBrew(bss.db)
-
-	return &brewmmer.GetActiveBrewResponse{
-		Brew: brew,
-	}, err
-}
-
-func fetchActiveBrew(db *sql.DB) (*brewmmer.Brew, error) {
-	// Making sure to return only one session
-	sqlStatement := `
-	SELECT
-		MAX(id)
-	FROM brews
-	WHERE completed_time IS NULL`
-	row := db.QueryRow(sqlStatement)
-
-	var id *int64
-
-	err := row.Scan(&id)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("Find latest brew in 'brews' database query failed!")
-
-		return nil, err
-	}
-
-	if id == nil {
-		return nil, status.Error(codes.NotFound, "No actibe brew was found!")
-	}
-
-	return fetchBrew(db, *id)
-}
-
-func (bss *brewServiceServer) ListBrews(ctx context.Context, req *brewmmer.ListBrewRequest) (*brewmmer.ListBrewResponse, error) {
-	panic("not implemented")
-}
-
 func fetchBrewSteps(db *sql.DB, brew *brewmmer.Brew) error {
 	log.WithFields(log.Fields{"brew_id": brew.Id}).Debug("Getting completed steps!")
 
@@ -378,6 +336,51 @@ func fetchBrewSteps(db *sql.DB, brew *brewmmer.Brew) error {
 	err = rows.Err()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func getNextStep(lastStep *brewmmer.Step, recipe *brewmmer.Recipe) *brewmmer.Step {
+	for i, step := range recipe.Steps {
+		if reflect.DeepEqual(lastStep, step) {
+			return recipe.Steps[i+1]
+		}
+	}
+	return nil
+}
+
+func insertNextStep(db *sql.DB, brewID int64, nextStep *brewmmer.Step) error {
+	m := jsonpb.Marshaler{}
+	stepJSON, err := m.MarshalToString(nextStep)
+	if err != nil {
+		return status.Error(codes.Internal, "json marshaling error-> "+err.Error())
+	}
+
+	sqlStatement := `INSERT INTO brew_steps (brew_id, start_time, step) VALUES ($1, $2, $3)`
+	_, err = db.Exec(sqlStatement, brewID, time.Now(), stepJSON)
+	if err != nil {
+		return status.Error(codes.Internal, "failed to insert into brew_steps-> "+err.Error())
+	}
+
+	return nil
+}
+
+func updateLastStepCompletedTime(db *sql.DB, brewID int64, nextStep *brewmmer.BrewStep) error {
+	m := jsonpb.Marshaler{}
+	stepJSON, err := m.MarshalToString(nextStep.Step)
+	if err != nil {
+		return status.Error(codes.Internal, "json marshaling error-> "+err.Error())
+	}
+
+	sqlStatement := `UPDATE brew_steps
+	SET completed_time = $1
+	WHERE brew_id = $2
+	AND step = $3`
+
+	_, err = db.Exec(sqlStatement, time.Now(), brewID, stepJSON)
+	if err != nil {
+		return status.Error(codes.Internal, "failed update brew_step completed_time-> "+err.Error())
 	}
 
 	return nil
