@@ -27,7 +27,11 @@ func NewBrewServiceServer(db *sql.DB) brewmmer.BrewServiceServer {
 
 func (bss *brewServiceServer) GetActiveBrew(ctx context.Context, req *brewmmer.GetActiveBrewRequest) (*brewmmer.GetActiveBrewResponse, error) {
 	log.Info("Getting active brew!")
+
 	brew, err := fetchActiveBrew(bss.db)
+	if err != nil {
+		return nil, err
+	}
 
 	return &brewmmer.GetActiveBrewResponse{
 		Brew: brew,

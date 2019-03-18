@@ -7,6 +7,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/brewm/gobrewmmer/pkg/api/brewmmer"
 	"github.com/brewm/gobrewmmer/pkg/service/ds18b20"
@@ -56,45 +58,10 @@ func NewSessionServiceServer(db *sql.DB) brewmmer.SessionServiceServer {
 // CRUD part (Reads)
 //
 
-func (sss *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSessionRequest) (*brewmmer.GetSessionResponse, error) {
-	log.WithFields(log.Fields{"id": req.Id}).Info("Getting session!")
+func (sss *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.GetActiveSessionRequest) (*brewmmer.GetSessionResponse, error) {
+	log.Info("Getting active session!")
 
-	sqlStatement := `
-	SELECT
-	id,
-	start_time,
-	stop_time,
-	note
-	FROM sessions
-	WHERE id=$1`
-	row := sss.db.QueryRow(sqlStatement, req.Id)
-
-	var nullableStopTime *time.Time
-	var startTime *time.Time
-
-	session := new(brewmmer.Session)
-	err := row.Scan(
-		&session.Id,
-		&startTime,
-		&nullableStopTime,
-		&session.Note,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	err = fillTime(session, startTime, nullableStopTime)
-	if err != nil {
-		return nil, err
-	}
-
-	log.WithFields(log.Fields{
-		"id":         session.Id,
-		"start_time": session.StartTime,
-		"stop_time":  session.StopTime,
-	}).Debug("Found session!")
-
-	err = fetchMeasurements(sss.db, session)
+	session, err := fetchActiveSession(sss.db)
 	if err != nil {
 		return nil, err
 	}
@@ -104,46 +71,10 @@ func (sss *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSessi
 	}, nil
 }
 
-func (sss *sessionServiceServer) GetActive(ctx context.Context, req *brewmmer.GetActiveSessionRequest) (*brewmmer.GetSessionResponse, error) {
-	log.Info("Getting active session!")
+func (sss *sessionServiceServer) Get(ctx context.Context, req *brewmmer.GetSessionRequest) (*brewmmer.GetSessionResponse, error) {
+	log.WithFields(log.Fields{"id": req.Id}).Info("Getting session!")
 
-	// Making sure to return only one session
-	sqlStatement := `
-	SELECT
-		MAX(id),
-		start_time,
-		stop_time,
-		note
-	FROM sessions
-	WHERE stop_time IS NULL`
-	row := sss.db.QueryRow(sqlStatement)
-
-	var nullableStopTime *time.Time
-	var startTime *time.Time
-
-	session := new(brewmmer.Session)
-	err := row.Scan(
-		&session.Id,
-		&startTime,
-		&nullableStopTime,
-		&session.Note,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	err = fillTime(session, startTime, nullableStopTime)
-	if err != nil {
-		return nil, err
-	}
-
-	log.WithFields(log.Fields{
-		"id":         session.Id,
-		"start_time": session.StartTime,
-		"stop_time":  session.StopTime,
-	}).Debug("Found session!")
-
-	err = fetchMeasurements(sss.db, session)
+	session, err := fetchSession(sss.db, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +120,6 @@ func (sss *sessionServiceServer) List(ctx context.Context, req *brewmmer.ListSes
 		}
 
 		err = fillTime(session, startTime, nullableStopTime)
-
 		if err != nil {
 			return nil, err
 		}
@@ -204,6 +134,76 @@ func (sss *sessionServiceServer) List(ctx context.Context, req *brewmmer.ListSes
 	return &brewmmer.ListSessionResponse{
 		Sessions: sessions,
 	}, nil
+}
+
+func fetchActiveSession(db *sql.DB) (*brewmmer.Session, error) {
+	sqlStatement := `
+	SELECT
+		MAX(id)
+	FROM sessions
+	WHERE stop_time IS NULL`
+	row := db.QueryRow(sqlStatement)
+
+	var id *int64
+
+	err := row.Scan(&id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("Find latest session in 'sessions' database query failed!")
+
+		return nil, err
+	}
+
+	if id == nil {
+		return nil, status.Error(codes.NotFound, "No actibe session was found!")
+	}
+
+	return fetchSession(db, *id)
+}
+
+func fetchSession(db *sql.DB, id int64) (*brewmmer.Session, error) {
+	sqlStatement := `
+	SELECT
+		id,
+		start_time,
+		stop_time,
+		note
+	FROM sessions
+	WHERE id=$1`
+	row := db.QueryRow(sqlStatement, id)
+
+	var nullableStopTime *time.Time
+	var startTime *time.Time
+
+	session := new(brewmmer.Session)
+	err := row.Scan(
+		&session.Id,
+		&startTime,
+		&nullableStopTime,
+		&session.Note,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = fillTime(session, startTime, nullableStopTime)
+	if err != nil {
+		return nil, err
+	}
+
+	log.WithFields(log.Fields{
+		"id":         session.Id,
+		"start_time": session.StartTime,
+		"stop_time":  session.StopTime,
+	}).Debug("Found session!")
+
+	err = fetchMeasurements(db, session)
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
 }
 
 func fillTime(session *brewmmer.Session, startTime *time.Time, nullableStopTime *time.Time) error {
