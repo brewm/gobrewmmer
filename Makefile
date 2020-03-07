@@ -1,12 +1,3 @@
-install-deps:
-	go get github.com/urfave/cli
-	go get github.com/mattn/go-sqlite3
-	go get github.com/sirupsen/logrus
-	go get github.com/golang/protobuf
-	go get github.com/golang/protobuf/proto
-	go get github.com/golang/protobuf/protoc-gen-go
-	go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
-
 install-brewmctl:
 	go install -v ./cmd/brewmctl
 
