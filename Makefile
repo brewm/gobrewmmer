@@ -4,7 +4,7 @@ install-deps:
 	go get github.com/sirupsen/logrus
 	go get github.com/golang/protobuf
 	go get github.com/golang/protobuf/proto
-	gp get github.com/golang/protobuf/protoc-gen-go
+	go get github.com/golang/protobuf/protoc-gen-go
 	go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 
 install-brewmctl:
