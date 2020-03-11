@@ -3,6 +3,8 @@ module github.com/brewm/gobrewmmer
 go 1.14
 
 require (
+	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214 // indirect
+	github.com/alexkohler/nakedret v1.0.0 // indirect
 	github.com/golang/protobuf v1.3.4
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pseudomuto/protoc-gen-doc v1.3.1 // indirect
